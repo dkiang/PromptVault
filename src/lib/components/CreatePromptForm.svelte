@@ -2,11 +2,13 @@
   import { createEventDispatcher } from 'svelte';
   import { storage } from '../storage';
 
+  export let defaultHidden: boolean = false;
+
   const dispatch = createEventDispatcher();
 
   let content = '';
   let tags = '';
-  let isHidden = false;
+  let isHidden = defaultHidden;
   let isSubmitting = false;
 
   async function handleSubmit(event: Event) {
@@ -29,7 +31,7 @@
       
       content = '';
       tags = '';
-      isHidden = false;
+      isHidden = defaultHidden;
       
       dispatch('created');
     } catch (error) {

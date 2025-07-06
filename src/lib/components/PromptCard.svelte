@@ -4,6 +4,7 @@
   import TagList from './TagList.svelte';
 
   export let prompt: Prompt;
+  export let searchQuery: string = '';
 
   const dispatch = createEventDispatcher();
 
@@ -16,6 +17,24 @@
   $: truncatedContent = prompt.content.length > 150 
     ? prompt.content.substring(0, 150) + '...'
     : prompt.content;
+
+  function highlightSearchTerms(text: string, query: string): string {
+    if (!query.trim()) return text;
+    
+    const searchTerms = query.toLowerCase().split(' ').filter(term => term.length > 0);
+    let highlightedText = text;
+    
+    searchTerms.forEach(term => {
+      const regex = new RegExp(`(${term})`, 'gi');
+      highlightedText = highlightedText.replace(regex, '<mark class="bg-yellow-200 dark:bg-yellow-800 dark:text-yellow-100">$1</mark>');
+    });
+    
+    return highlightedText;
+  }
+
+  $: highlightedContent = showFullContent 
+    ? highlightSearchTerms(prompt.content, searchQuery)
+    : highlightSearchTerms(truncatedContent, searchQuery);
 
   async function copyToClipboard() {
     try {
@@ -57,9 +76,40 @@
     editTags = prompt.tags.join(', ');
     editIsHidden = prompt.isHidden;
   }
+
+  async function openInChatGPT() {
+    const encodedPrompt = encodeURIComponent(prompt.content);
+    // Use 'message' parameter to pre-fill without submitting
+    const chatGPTUrl = `https://chat.openai.com/?message=${encodedPrompt}`;
+    window.open(chatGPTUrl, '_blank');
+  }
+
+  async function openInPerplexity() {
+    const encodedPrompt = encodeURIComponent(prompt.content);
+    // Use 'q' parameter but with a method that doesn't auto-submit
+    const perplexityUrl = `https://www.perplexity.ai/search?q=${encodedPrompt}&focus=internet`;
+    window.open(perplexityUrl, '_blank');
+  }
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow">
+  <!-- Chatbot Icons -->
+  <div class="flex gap-2 mb-4">
+    <button
+      on:click={openInChatGPT}
+      class="flex items-center justify-center w-8 h-8 bg-green-500 hover:bg-green-600 rounded-full text-white font-bold text-sm transition-colors"
+      title="Open in ChatGPT"
+    >
+      GPT
+    </button>
+    <button
+      on:click={openInPerplexity}
+      class="flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full text-white font-bold text-sm transition-colors"
+      title="Open in Perplexity"
+    >
+      PX
+    </button>
+  </div>
   {#if isEditing}
     <div class="space-y-4">
       <textarea
@@ -113,11 +163,7 @@
       </div>
       
       <div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-        {#if showFullContent}
-          {prompt.content}
-        {:else}
-          {truncatedContent}
-        {/if}
+        {@html highlightedContent}
         
         {#if prompt.content.length > 150}
           <button
@@ -130,20 +176,20 @@
       </div>
       
       {#if prompt.tags.length > 0}
-        <TagList tags={prompt.tags} />
+        <TagList tags={prompt.tags} {searchQuery} />
       {/if}
       
       <div class="flex items-center justify-end text-sm text-gray-500">
         <div class="flex gap-2">
           <button
             on:click={copyToClipboard}
-            class="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Copy
           </button>
           <button
             on:click={() => isEditing = true}
-            class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
             Edit
           </button>

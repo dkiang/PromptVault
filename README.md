@@ -5,12 +5,15 @@ A modern, feature-rich prompt management application built with SvelteKit. Store
 ## Features
 
 - **Content-Only Display**: Clean interface showing only prompt content and tags (no titles)
-- **Full-text Search**: Search across all prompt content and tags with multiple terms
+- **Full-text Search with Highlighting**: Search across all prompt content and tags with visual keyword highlighting
+- **Share/Sync**: Generate secure links to sync prompts across devices without accounts
+- **Chatbot Integration**: Direct links to ChatGPT and Perplexity with pre-filled prompts
 - **Dark Mode**: Toggle between light and dark themes with persistent preference
 - **Tag System**: Organize prompts with custom tags that update based on current view
 - **Hidden Prompts**: Password-protected prompts (password: "foobar") completely separated from regular view
-- **Context-Aware Interface**: Tags and search scope automatically adjust to current view
-- **Export/Import**: Backup and restore your prompts
+- **Context-Aware Interface**: Tags, search scope, and create form automatically adjust to current view
+- **Rainbow UI**: Color-coded action buttons for intuitive navigation
+- **Export/Import**: Backup and restore your prompts via JSON files
 - **Edit Mode**: Full editing capabilities including hidden status toggle
 - **Responsive Design**: Works seamlessly on desktop and mobile
 
@@ -44,10 +47,10 @@ A modern, feature-rich prompt management application built with SvelteKit. Store
 
 ### Creating Prompts
 
-1. Click the **"+ New Prompt"** button
+1. Click the **"+ New Prompt"** button (green)
 2. Enter your prompt content in the textarea
 3. Add tags (optional, comma-separated)
-4. Mark as hidden if needed (requires password to view later)
+4. Hidden toggle automatically matches current view (on when in hidden mode, off otherwise)
 5. Click **"Create Prompt"**
 
 Prompts are displayed showing only their content and tags for a clean, distraction-free interface.
@@ -55,6 +58,7 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 ### Searching Prompts
 
 - Use the search bar in the sidebar to search across all prompt content and tags
+- **Keyword highlighting**: Matching terms are highlighted in yellow throughout content and tags
 - Search supports multiple terms (all terms must match)
 - Search is automatically scoped to your current view (regular or hidden prompts)
 - Filter by tags using the tag list in the sidebar
@@ -62,10 +66,18 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 
 ### Managing Prompts
 
-- **Edit**: Click the "Edit" button on any prompt card to modify content, tags, and hidden status
-- **Copy**: Click the "Copy" button to copy prompt content to clipboard
-- **Delete**: Click the "Delete" button to remove a prompt
-- **Hidden Toggle**: In edit mode, you can change whether a prompt is hidden or visible
+- **Chatbot Integration**: Click **GPT** (green) or **PX** (blue) icons to open prompt in ChatGPT or Perplexity
+- **Copy**: Click the "Copy" button (blue) to copy prompt content to clipboard
+- **Edit**: Click the "Edit" button (purple) to modify content, tags, and hidden status
+- **Delete**: Click the "Delete" button (red) to remove a prompt
+
+### Sharing & Syncing
+
+- **Export**: Click "Export" (indigo) to download prompts as JSON file
+- **Import**: Click "Import" (orange) to upload prompts from JSON file
+- **Share**: Click "Share" (yellow) to generate a secure link containing all prompts
+- **Auto-sync**: Opening a share link automatically prompts to import prompts
+- **Cross-device**: Share links work across any device/browser without accounts
 
 ### Hidden Prompts
 
@@ -74,10 +86,14 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 - Hidden prompts are completely separate from regular prompts
 - Lock icon changes to 🔓 when unlocked
 - Switching away from hidden view automatically locks it again
+- Creating prompts in hidden mode automatically sets them as hidden
 
-### Dark Mode
+### Dark Mode & UI
 
-Click the "Toggle Dark Mode" button in the sidebar to switch between light and dark themes. Your preference is automatically saved.
+- Click "Toggle Dark Mode" button in the sidebar to switch themes
+- **Rainbow color scheme**: All buttons use distinct colors for easy identification
+- Persistent theme preference across sessions
+- Fully responsive design for desktop and mobile
 
 ## Development
 

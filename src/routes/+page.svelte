@@ -5,6 +5,7 @@
   import PromptCard from '$lib/components/PromptCard.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
   import CreatePromptForm from '$lib/components/CreatePromptForm.svelte';
+  import ExportImport from '$lib/components/ExportImport.svelte';
 
   const darkMode = writable(false);
   const modalOpen = writable(false);
@@ -186,14 +187,17 @@
   <section class="flex-1 p-6 overflow-y-auto">
     <header class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">PromptVault</h1>
-      <button on:click={() => modalOpen.set(true)} class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200">
-        + New Prompt
-      </button>
+      <div class="flex items-center gap-4">
+        <ExportImport />
+        <button on:click={() => modalOpen.set(true)} class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+          + New Prompt
+        </button>
+      </div>
     </header>
 
     <div class="grid gap-4 md:grid-cols-2">
       {#each filteredPrompts as prompt (prompt.id)}
-        <PromptCard {prompt} on:update={handlePromptUpdated} />
+        <PromptCard {prompt} {searchQuery} on:update={handlePromptUpdated} />
       {/each}
       
       {#if filteredPrompts.length === 0}
@@ -222,7 +226,7 @@
             ✕
           </button>
         </div>
-        <CreatePromptForm on:created={handlePromptCreated} />
+        <CreatePromptForm defaultHidden={selectedTag === 'hidden' && isHiddenUnlocked} on:created={handlePromptCreated} />
       </div>
     </div>
   {/if}
