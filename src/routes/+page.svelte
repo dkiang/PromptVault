@@ -1,31 +1,176 @@
-<script lang="ts">
-  import Header from '$lib/components/Header.svelte';
-  import CreatePromptForm from '$lib/components/CreatePromptForm.svelte';
+<script>
+  import { onMount } from 'svelte';
+  import { writable } from 'svelte/store';
+  import { storage } from '$lib/storage';
+  import PromptCard from '$lib/components/PromptCard.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
-  import PromptList from '$lib/components/PromptList.svelte';
+  import CreatePromptForm from '$lib/components/CreatePromptForm.svelte';
 
+  export const darkMode = writable(false);
+  export const modalOpen = writable(false);
+
+  let prompts = [];
+  let filteredPrompts = [];
   let searchQuery = '';
+  let selectedTag = 'all';
+  let allTags = [];
 
-  function handleSearch(event: CustomEvent<string>) {
-    searchQuery = event.detail;
+  function toggleDarkMode() {
+    darkMode.update(v => {
+      const next = !v;
+      document.documentElement.classList.toggle('dark', next);
+      return next;
+    });
   }
+
+  async function loadPrompts() {
+    try {
+      prompts = await storage.getAllPrompts();
+      updateFilteredPrompts();
+      extractTags();
+    } catch (error) {
+      console.error('Failed to load prompts:', error);
+    }
+  }
+
+  function extractTags() {
+    const tagSet = new Set();
+    prompts.forEach(prompt => {
+      prompt.tags.forEach(tag => tagSet.add(tag));
+    });
+    allTags = Array.from(tagSet);
+  }
+
+  function updateFilteredPrompts() {
+    let filtered = prompts;
+    
+    if (searchQuery) {
+      filtered = filtered.filter(prompt => 
+        prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prompt.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        prompt.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    if (selectedTag !== 'all') {
+      if (selectedTag === 'hidden') {
+        filtered = filtered.filter(prompt => prompt.isHidden);
+      } else {
+        filtered = filtered.filter(prompt => prompt.tags.includes(selectedTag));
+      }
+    }
+    
+    filteredPrompts = filtered;
+  }
+
+  function handleSearch(event) {
+    searchQuery = event.detail;
+    updateFilteredPrompts();
+  }
+
+  function handleTagFilter(tag) {
+    selectedTag = tag;
+    updateFilteredPrompts();
+  }
+
+  function handlePromptCreated() {
+    modalOpen.set(false);
+    loadPrompts();
+  }
+
+  function handlePromptUpdated() {
+    loadPrompts();
+  }
+
+  onMount(() => {
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      darkMode.set(true);
+      document.documentElement.classList.add('dark');
+    }
+    loadPrompts();
+  });
 </script>
 
-<svelte:head>
-  <title>PromptVault - Your Personal Prompt Manager</title>
-  <meta name="description" content="A lightweight, web-based prompt manager for saving and organizing AI prompts" />
-</svelte:head>
-
-<div class="min-h-screen bg-gray-50">
-  <Header />
-  
-  <main class="py-8">
-    <div class="max-w-4xl mx-auto px-4 space-y-8">
-      <CreatePromptForm />
-      
+<main class="flex h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto">
+    <h2 class="text-xl font-bold mb-4">Tags</h2>
+    <ul class="space-y-2">
+      <li>
+        <button 
+          on:click={() => handleTagFilter('all')} 
+          class="w-full text-left hover:underline {selectedTag === 'all' ? 'font-bold text-blue-600' : ''}"
+        >
+          All Prompts ({prompts.length})
+        </button>
+      </li>
+      <li>
+        <button 
+          on:click={() => handleTagFilter('hidden')} 
+          class="w-full text-left hover:underline {selectedTag === 'hidden' ? 'font-bold text-blue-600' : ''}"
+        >
+          🔒 Hidden ({prompts.filter(p => p.isHidden).length})
+        </button>
+      </li>
+      {#each allTags as tag}
+        <li>
+          <button 
+            on:click={() => handleTagFilter(tag)} 
+            class="w-full text-left hover:underline {selectedTag === tag ? 'font-bold text-blue-600' : ''}"
+          >
+            {tag} ({prompts.filter(p => p.tags.includes(tag)).length})
+          </button>
+        </li>
+      {/each}
+    </ul>
+    <div class="mt-6">
       <SearchBar on:search={handleSearch} bind:value={searchQuery} />
-      
-      <PromptList {searchQuery} />
     </div>
-  </main>
-</div>
+    <button on:click={toggleDarkMode} class="mt-6 text-sm text-gray-600 dark:text-gray-400 underline">Toggle Dark Mode</button>
+  </aside>
+
+  <!-- Main Content -->
+  <section class="flex-1 p-6 overflow-y-auto">
+    <header class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold">Your Prompts</h1>
+      <button on:click={() => modalOpen.set(true)} class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200">
+        + New Prompt
+      </button>
+    </header>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      {#each filteredPrompts as prompt (prompt.id)}
+        <PromptCard {prompt} on:update={handlePromptUpdated} />
+      {/each}
+      
+      {#if filteredPrompts.length === 0}
+        <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
+          {#if searchQuery}
+            No prompts found matching "<strong>{searchQuery}</strong>"
+          {:else if selectedTag === 'hidden'}
+            No hidden prompts found
+          {:else if selectedTag !== 'all'}
+            No prompts found with tag "<strong>{selectedTag}</strong>"
+          {:else}
+            No prompts yet. Create your first prompt!
+          {/if}
+        </div>
+      {/if}
+    </div>
+  </section>
+
+  <!-- Modal -->
+  {#if $modalOpen}
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md w-full">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">New Prompt</h2>
+          <button on:click={() => modalOpen.set(false)} class="text-gray-500 hover:text-gray-700">
+            ✕
+          </button>
+        </div>
+        <CreatePromptForm on:created={handlePromptCreated} />
+      </div>
+    </div>
+  {/if}
+</main>
