@@ -9,9 +9,9 @@
 
   let showFullContent = false;
   let isEditing = false;
-  let editTitle = prompt.title;
   let editContent = prompt.content;
   let editTags = prompt.tags.join(', ');
+  let editIsHidden = prompt.isHidden;
 
   $: truncatedContent = prompt.content.length > 150 
     ? prompt.content.substring(0, 150) + '...'
@@ -40,9 +40,9 @@
     try {
       const tags = editTags.split(',').map(tag => tag.trim()).filter(tag => tag);
       await storage.updatePrompt(prompt.id, {
-        title: editTitle,
         content: editContent,
-        tags
+        tags,
+        isHidden: editIsHidden
       });
       isEditing = false;
       dispatch('update');
@@ -53,33 +53,39 @@
 
   function cancelEdit() {
     isEditing = false;
-    editTitle = prompt.title;
     editContent = prompt.content;
     editTags = prompt.tags.join(', ');
+    editIsHidden = prompt.isHidden;
   }
 </script>
 
-<div class="bg-white rounded-lg shadow-md border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow">
   {#if isEditing}
     <div class="space-y-4">
-      <input
-        bind:value={editTitle}
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        placeholder="Prompt title"
-      />
-      
       <textarea
         bind:value={editContent}
         rows="6"
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
         placeholder="Enter your prompt here..."
       ></textarea>
       
       <input
         bind:value={editTags}
-        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         placeholder="Tags (comma-separated)"
       />
+      
+      <div class="flex items-center">
+        <input
+          id="editIsHidden"
+          type="checkbox"
+          bind:checked={editIsHidden}
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label for="editIsHidden" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          Mark as hidden (password protected)
+        </label>
+      </div>
       
       <div class="flex gap-2">
         <button
@@ -98,8 +104,7 @@
     </div>
   {:else}
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-gray-900">{prompt.title}</h3>
+      <div class="flex items-center justify-end">
         {#if prompt.isHidden}
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
             Hidden
@@ -107,7 +112,7 @@
         {/if}
       </div>
       
-      <div class="text-gray-700 whitespace-pre-wrap">
+      <div class="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
         {#if showFullContent}
           {prompt.content}
         {:else}
@@ -128,8 +133,7 @@
         <TagList tags={prompt.tags} />
       {/if}
       
-      <div class="flex items-center justify-between text-sm text-gray-500">
-        <span>Created: {prompt.createdAt.toLocaleDateString()}</span>
+      <div class="flex items-center justify-end text-sm text-gray-500">
         <div class="flex gap-2">
           <button
             on:click={copyToClipboard}

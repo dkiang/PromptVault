@@ -19,6 +19,12 @@ class PromptStorage {
   private dbVersion = 1;
   private db: IDBDatabase | null = null;
 
+  private generateTitleFromContent(content: string): string {
+    const firstLine = content.split('\n')[0];
+    const words = firstLine.split(' ').slice(0, 6);
+    return words.join(' ').substring(0, 50) + (firstLine.length > 50 ? '...' : '');
+  }
+
   async init(): Promise<void> {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.dbVersion);
@@ -91,11 +97,12 @@ class PromptStorage {
     });
   }
 
-  async savePrompt(prompt: Omit<Prompt, 'id' | 'createdAt' | 'updatedAt'>): Promise<Prompt> {
+  async savePrompt(prompt: Omit<Prompt, 'id' | 'createdAt' | 'updatedAt' | 'title'> & { title?: string }): Promise<Prompt> {
     if (!this.db) await this.init();
     
     const newPrompt: Prompt = {
       ...prompt,
+      title: prompt.title || this.generateTitleFromContent(prompt.content),
       id: crypto.randomUUID(),
       createdAt: new Date(),
       updatedAt: new Date()

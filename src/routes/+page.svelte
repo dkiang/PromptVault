@@ -6,19 +6,28 @@
   import SearchBar from '$lib/components/SearchBar.svelte';
   import CreatePromptForm from '$lib/components/CreatePromptForm.svelte';
 
-  export const darkMode = writable(false);
-  export const modalOpen = writable(false);
+  const darkMode = writable(false);
+  const modalOpen = writable(false);
 
   let prompts = [];
   let filteredPrompts = [];
   let searchQuery = '';
   let selectedTag = 'all';
   let allTags = [];
+  let isHiddenUnlocked = false;
+  
+  // Basic obfuscation - not truly secure, just harder to spot casually
+  const hiddenKey = atob('Zm9vYmFy'); // base64 encoded
 
   function toggleDarkMode() {
     darkMode.update(v => {
       const next = !v;
-      document.documentElement.classList.toggle('dark', next);
+      if (next) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem('darkMode', next.toString());
       return next;
     });
   }
@@ -36,7 +45,16 @@
   function extractTags() {
     const tagSet = new Set();
     prompts.forEach(prompt => {
-      prompt.tags.forEach(tag => tagSet.add(tag));
+      // Only include tags from prompts that are visible in current view
+      if (selectedTag === 'hidden') {
+        if (prompt.isHidden) {
+          prompt.tags.forEach(tag => tagSet.add(tag));
+        }
+      } else {
+        if (!prompt.isHidden) {
+          prompt.tags.forEach(tag => tagSet.add(tag));
+        }
+      }
     });
     allTags = Array.from(tagSet);
   }
@@ -44,20 +62,27 @@
   function updateFilteredPrompts() {
     let filtered = prompts;
     
-    if (searchQuery) {
-      filtered = filtered.filter(prompt => 
-        prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        prompt.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        prompt.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-    
-    if (selectedTag !== 'all') {
-      if (selectedTag === 'hidden') {
-        filtered = filtered.filter(prompt => prompt.isHidden);
+    if (selectedTag === 'hidden') {
+      if (!isHiddenUnlocked) {
+        filtered = [];
       } else {
+        filtered = filtered.filter(prompt => prompt.isHidden);
+      }
+    } else {
+      // Hide hidden prompts from all other views
+      filtered = filtered.filter(prompt => !prompt.isHidden);
+      
+      if (selectedTag !== 'all') {
         filtered = filtered.filter(prompt => prompt.tags.includes(selectedTag));
       }
+    }
+    
+    if (searchQuery) {
+      const searchTerms = searchQuery.toLowerCase().split(' ').filter(term => term.length > 0);
+      filtered = filtered.filter(prompt => {
+        const promptText = (prompt.content + ' ' + prompt.tags.join(' ')).toLowerCase();
+        return searchTerms.every(term => promptText.includes(term));
+      });
     }
     
     filteredPrompts = filtered;
@@ -69,7 +94,22 @@
   }
 
   function handleTagFilter(tag) {
-    selectedTag = tag;
+    if (tag === 'hidden' && !isHiddenUnlocked) {
+      const password = prompt('Enter password to view hidden prompts:');
+      if (password === hiddenKey) {
+        isHiddenUnlocked = true;
+        selectedTag = tag;
+      } else {
+        alert('Incorrect password');
+        return;
+      }
+    } else {
+      selectedTag = tag;
+      if (tag !== 'hidden') {
+        isHiddenUnlocked = false;
+      }
+    }
+    extractTags(); // Re-extract tags for the new view
     updateFilteredPrompts();
   }
 
@@ -83,7 +123,16 @@
   }
 
   onMount(() => {
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    const storedDarkMode = localStorage.getItem('darkMode');
+    if (storedDarkMode) {
+      const isDark = storedDarkMode === 'true';
+      darkMode.set(isDark);
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       darkMode.set(true);
       document.documentElement.classList.add('dark');
     }
@@ -109,7 +158,11 @@
           on:click={() => handleTagFilter('hidden')} 
           class="w-full text-left hover:underline {selectedTag === 'hidden' ? 'font-bold text-blue-600' : ''}"
         >
-          🔒 Hidden ({prompts.filter(p => p.isHidden).length})
+          {#if isHiddenUnlocked && selectedTag === 'hidden'}
+            🔓 Hidden ({prompts.filter(p => p.isHidden).length})
+          {:else}
+            🔒 Hidden ({prompts.filter(p => p.isHidden).length})
+          {/if}
         </button>
       </li>
       {#each allTags as tag}
@@ -132,7 +185,7 @@
   <!-- Main Content -->
   <section class="flex-1 p-6 overflow-y-auto">
     <header class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">Your Prompts</h1>
+      <h1 class="text-2xl font-bold">PromptVault</h1>
       <button on:click={() => modalOpen.set(true)} class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200">
         + New Prompt
       </button>
