@@ -119,11 +119,11 @@
   });
 </script>
 
-<div class="flex gap-2 flex-wrap">
+<div class="space-y-2">
   <button
     on:click={exportPrompts}
     disabled={isExporting}
-    class="px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+    class="w-full px-3 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm min-h-[44px] touch-manipulation"
   >
     {isExporting ? 'Exporting...' : 'Export'}
   </button>
@@ -131,7 +131,7 @@
   <button
     on:click={importPrompts}
     disabled={isImporting}
-    class="px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+    class="w-full px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm min-h-[44px] touch-manipulation"
   >
     {isImporting ? 'Importing...' : 'Import'}
   </button>
@@ -139,7 +139,7 @@
   <button
     on:click={generateShareLink}
     disabled={isGeneratingLink}
-    class="px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
+    class="w-full px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm min-h-[44px] touch-manipulation"
   >
     {isGeneratingLink ? 'Generating...' : 'Share'}
   </button>
@@ -155,8 +155,8 @@
 
 <!-- Share Modal -->
 {#if showShareModal}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md w-full mx-4">
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-md w-full max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold text-gray-900 dark:text-white">Share Your Prompts</h3>
         <button on:click={closeShareModal} class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
@@ -169,16 +169,16 @@
           Copy this link to share your prompts across devices. The link contains all your prompts encoded in the URL.
         </p>
         
-        <div class="flex gap-2">
+        <div class="flex gap-2 flex-col sm:flex-row">
           <input
             type="text"
             value={shareLink}
             readonly
-            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none text-sm"
+            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none text-sm break-all"
           />
           <button
             on:click={copyShareLink}
-            class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px] touch-manipulation whitespace-nowrap"
           >
             Copy
           </button>

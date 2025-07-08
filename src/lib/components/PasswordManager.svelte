@@ -131,7 +131,7 @@
 
 <button
   on:click={openModal}
-  class="text-sm text-gray-600 dark:text-gray-400 underline hover:text-gray-800 dark:hover:text-gray-200"
+  class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
   title="Manage hidden prompt password"
 >
   Password Settings

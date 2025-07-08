@@ -29,6 +29,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Runtime configuration system for feature toggles without recompilation
 - Hidden prompts feature disabled by default (DevTools-only enable)
 - Default password can be changed via configuration interface
+- **Full mobile responsiveness and touch optimization**
+- **Hamburger menu navigation for mobile devices**
+- **Landscape orientation support with compact layouts**
+- **Touch-friendly buttons with 44px minimum touch targets**
+- **Mobile-optimized modals and forms**
+- **Responsive breakpoints throughout the application**
 
 ### Changed
 - Replaced "Your Prompts" header with "PromptVault"
@@ -44,6 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All hidden prompts UI elements are conditionally rendered based on configuration
 - Settings UI removed - Hidden feature toggle now DevTools-only
 - Chatbot integration UI now uses blue underlined text links ("Open in: ChatGPT | Perplexity") instead of buttons or icons
+- **Desktop layout: Sidebar always visible on large screens with proper content flow**
+- **Mobile layout: Collapsible sidebar with overlay for small screens**
+- **Dark mode toggle: Dynamic text and emoji based on current mode (🌙 Dark Mode / 🌞 Light Mode)**
+- **Export/Import/Share buttons moved to sidebar under "Data Management" section**
+- **New Prompt button enlarged for better readability on all devices**
+- **Removed underlines from sidebar navigation links for cleaner appearance**
 
 ### Removed
 - Title display from prompt cards (content-only view)
@@ -60,6 +72,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search functionality scoped to visible prompts only
 - Tag extraction limited to current view context
 - Chatbot links pre-fill prompts without auto-submitting
+- **Sidebar visibility persistence on desktop screens without flash**
+- **Sidebar positioning to prevent content overlap on desktop**
+- **Touch target accessibility with proper minimum sizes**
+- **Modal overflow and scrolling on mobile devices**
+- **Responsive text sizing and spacing for different screen sizes**
 
 ### Security
 - Added basic obfuscation for hidden prompt password

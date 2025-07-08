@@ -11,6 +11,9 @@
 
   const darkMode = writable(false);
   const modalOpen = writable(false);
+  const sidebarOpen = writable(false);
+  
+  let isDesktop = false;
 
   import type { Prompt } from '$lib/storage';
   
@@ -34,6 +37,14 @@
       localStorage.setItem('darkMode', next.toString());
       return next;
     });
+  }
+
+  function toggleSidebar() {
+    sidebarOpen.update(v => !v);
+  }
+
+  function closeSidebar() {
+    sidebarOpen.set(false);
   }
 
   async function loadPrompts() {
@@ -169,6 +180,15 @@
   }
 
   onMount(() => {
+    // Check if desktop on mount
+    isDesktop = window.innerWidth >= 1024;
+    
+    // Handle window resize
+    const handleResize = () => {
+      isDesktop = window.innerWidth >= 1024;
+    };
+    window.addEventListener('resize', handleResize);
+    
     const storedDarkMode = localStorage.getItem('darkMode');
     if (storedDarkMode) {
       const isDark = storedDarkMode === 'true';
@@ -184,12 +204,21 @@
     }
     loadPrompts();
     loadPassword();
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   });
 </script>
 
-<main class="flex h-screen bg-white text-black dark:bg-gray-900 dark:text-white">
+<main class="flex h-screen bg-white text-black dark:bg-gray-900 dark:text-white landscape-compact">
+  <!-- Mobile Sidebar Overlay -->
+  {#if $sidebarOpen}
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" on:click={closeSidebar}></div>
+  {/if}
+  
   <!-- Sidebar -->
-  <aside class="w-64 bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto">
+  <aside class="w-64 h-full bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto z-50 transition-transform duration-300 ease-in-out {isDesktop ? 'static lg:z-auto lg:transition-none lg:transform-none translate-x-0' : 'fixed ' + ($sidebarOpen ? 'translate-x-0' : '-translate-x-full')}">
     <h2 class="text-xl font-bold mb-4">Tags</h2>
     <ul class="space-y-2">
       <li>
@@ -228,28 +257,48 @@
     <div class="mt-6">
       <SearchBar on:search={handleSearch} bind:value={searchQuery} />
     </div>
+    
+    <!-- Data Management -->
+    <div class="mt-6">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Data Management</h3>
+      <ExportImport />
+    </div>
+    
     <div class="mt-6 space-y-2">
-      <button on:click={toggleDarkMode} class="block text-sm text-gray-600 dark:text-gray-400 underline hover:text-gray-800 dark:hover:text-gray-200">Toggle Dark Mode</button>
+      <button on:click={toggleDarkMode} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+        {#if $darkMode}
+          🌞 Light Mode
+        {:else}
+          🌙 Dark Mode
+        {/if}
+      </button>
       {#if config.isHiddenPromptsEnabled()}
         <PasswordManager on:passwordReset={handlePasswordReset} />
       {/if}
-      <button on:click={() => showAboutModal = true} class="block text-sm text-gray-600 dark:text-gray-400 underline hover:text-gray-800 dark:hover:text-gray-200">About</button>
+      <button on:click={() => showAboutModal = true} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">About</button>
     </div>
   </aside>
 
   <!-- Main Content -->
-  <section class="flex-1 p-6 overflow-y-auto">
+  <section class="flex-1 p-4 sm:p-6 overflow-y-auto">
     <header class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold">PromptVault</h1>
+      <!-- Mobile hamburger menu -->
       <div class="flex items-center gap-4">
-        <ExportImport />
-        <button on:click={() => modalOpen.set(true)} class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+        <button on:click={toggleSidebar} class="lg:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+        <h1 class="text-xl sm:text-2xl font-bold">PromptVault</h1>
+      </div>
+      <div class="flex items-center">
+        <button on:click={() => modalOpen.set(true)} class="bg-green-600 text-white px-4 py-2 lg:px-6 lg:py-3 text-base lg:text-lg font-medium rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 min-h-[44px] touch-manipulation">
           + New Prompt
         </button>
       </div>
     </header>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       {#each filteredPrompts as prompt (prompt.id)}
         <PromptCard {prompt} {searchQuery} on:update={handlePromptUpdated} />
       {/each}
@@ -272,8 +321,8 @@
 
   <!-- Modal -->
   {#if $modalOpen}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md w-full">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold">New Prompt</h2>
           <button on:click={() => modalOpen.set(false)} class="text-gray-500 hover:text-gray-700">
@@ -287,8 +336,8 @@
 
   <!-- About Modal -->
   {#if showAboutModal}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">About</h2>
           <button on:click={() => showAboutModal = false} class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">

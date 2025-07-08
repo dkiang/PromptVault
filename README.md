@@ -15,7 +15,9 @@ A modern, feature-rich prompt management application built with SvelteKit. Store
 - **Rainbow UI**: Color-coded action buttons for intuitive navigation
 - **Export/Import**: Backup and restore your prompts via JSON files
 - **Edit Mode**: Full editing capabilities including hidden status toggle
-- **Responsive Design**: Works seamlessly on desktop and mobile
+- **Mobile-First Responsive Design**: Fully optimized for mobile, tablet, and desktop devices
+- **Touch-Optimized Interface**: 44px minimum touch targets and mobile-friendly interactions
+- **Landscape Orientation Support**: Compact layouts optimized for landscape viewing
 
 ## Getting Started
 
@@ -73,6 +75,8 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 
 ### Sharing & Syncing
 
+Export, Import, and Share functions are located in the sidebar under the "Data Management" section:
+
 - **Export**: Click "Export" (indigo) to download prompts as JSON file
 - **Import**: Click "Import" (orange) to upload prompts from JSON file
 - **Share**: Click "Share" (yellow) to generate a secure link containing all prompts
@@ -116,10 +120,42 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 
 ### Dark Mode & UI
 
-- Click "Toggle Dark Mode" button in the sidebar to switch themes
+- **Dynamic Dark Mode Toggle**: Click the theme button in the sidebar - shows "🌙 Dark Mode" in light mode, "🌞 Light Mode" in dark mode
 - **Rainbow color scheme**: All buttons use distinct colors for easy identification
+- **Desktop Layout**: Persistent sidebar with tags and data management tools always visible
+- **Mobile Layout**: Collapsible hamburger menu with sidebar overlay for optimal mobile experience
+- **Responsive Navigation**: Sidebar automatically adapts to screen size and device orientation
+- **Touch-Friendly**: All interactive elements meet accessibility standards with proper touch targets
 - Persistent theme preference across sessions
-- Fully responsive design for desktop and mobile
+
+## Mobile & Responsive Features
+
+PromptVault is built mobile-first with extensive responsive design optimizations:
+
+### Mobile Navigation
+- **Hamburger Menu**: Tap the menu icon (≡) to open/close the sidebar on mobile devices
+- **Overlay Design**: Sidebar slides over content with backdrop overlay for intuitive mobile UX
+- **Gesture Support**: Tap outside the sidebar to close it on mobile
+
+### Touch Optimization
+- **44px Touch Targets**: All buttons meet WCAG accessibility standards for touch interaction
+- **Touch Manipulation**: Optimized touch response and gesture handling
+- **Button Sizing**: Responsive button sizing that adapts to screen size and orientation
+
+### Responsive Layouts
+- **Adaptive Grid**: Prompt cards automatically adjust from 1 column (mobile) to 2 columns (tablet) to 3 columns (desktop)
+- **Flexible Typography**: Text sizes scale appropriately across devices (xl/2xl on desktop, lg/xl on mobile)
+- **Smart Spacing**: Padding and margins adapt to screen size for optimal content density
+
+### Landscape Support
+- **Compact Mode**: Special landscape orientation optimizations for devices with limited height
+- **Reduced Spacing**: Tighter layouts when in landscape mode on mobile devices
+- **Viewport Optimization**: Enhanced viewport handling with `viewport-fit=cover` for modern devices
+
+### Cross-Device Experience
+- **Consistent Functionality**: All features work identically across desktop, tablet, and mobile
+- **Responsive Modals**: Forms and dialogs adapt to screen size with proper mobile scrolling
+- **Share Link Optimization**: Long URLs wrap properly and copy buttons are touch-friendly
 
 ## Development
 
