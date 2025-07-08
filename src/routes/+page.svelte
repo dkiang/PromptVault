@@ -128,6 +128,11 @@
   function handleSearch(event: CustomEvent<string>) {
     searchQuery = event.detail;
     updateFilteredPrompts();
+    
+    // Close sidebar on mobile after search
+    if (!isDesktop) {
+      closeSidebar();
+    }
   }
 
   function handleTagFilter(tag: string) {
@@ -157,6 +162,12 @@
         isHiddenUnlocked = false;
       }
     }
+    
+    // Close sidebar on mobile after tag selection
+    if (!isDesktop) {
+      closeSidebar();
+    }
+    
     extractTags(); // Re-extract tags for the new view
     updateFilteredPrompts();
   }
@@ -189,6 +200,20 @@
     };
     window.addEventListener('resize', handleResize);
     
+    // Handle escape key to close modals
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if ($modalOpen) {
+          modalOpen.set(false);
+        } else if (showAboutModal) {
+          showAboutModal = false;
+        } else if ($sidebarOpen && !isDesktop) {
+          closeSidebar();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeydown);
+    
     const storedDarkMode = localStorage.getItem('darkMode');
     if (storedDarkMode) {
       const isDark = storedDarkMode === 'true';
@@ -207,6 +232,7 @@
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeydown);
     };
   });
 </script>
@@ -218,7 +244,7 @@
   {/if}
   
   <!-- Sidebar -->
-  <aside class="w-64 h-full bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto z-50 transition-transform duration-300 ease-in-out {isDesktop ? 'static lg:z-auto lg:transition-none lg:transform-none translate-x-0' : 'fixed ' + ($sidebarOpen ? 'translate-x-0' : '-translate-x-full')}">
+  <aside class="w-64 h-full bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto z-50 transition-transform duration-300 ease-in-out {isDesktop ? 'static lg:z-auto lg:transition-none lg:transform-none' : 'fixed left-0 top-0 z-50 ' + ($sidebarOpen ? 'translate-x-0' : '-translate-x-full')}" on:click|stopPropagation>
     <h2 class="text-xl font-bold mb-4">Tags</h2>
     <ul class="space-y-2">
       <li>
@@ -298,7 +324,7 @@
       </div>
     </header>
 
-    <div class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       {#each filteredPrompts as prompt (prompt.id)}
         <PromptCard {prompt} {searchQuery} on:update={handlePromptUpdated} />
       {/each}
@@ -321,7 +347,7 @@
 
   <!-- Modal -->
   {#if $modalOpen}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
       <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold">New Prompt</h2>
@@ -336,7 +362,7 @@
 
   <!-- About Modal -->
   {#if showAboutModal}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
       <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">About</h2>
