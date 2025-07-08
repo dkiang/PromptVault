@@ -67,3 +67,31 @@ npm run preview       # Local preview server
 ---
 
 For questions, open an issue or contact the project maintainer.
+
+## ⚠️ Environment Compatibility Notes
+
+### 🚫 Do not use SvelteKit `preprocess()`
+
+This project is deployed on a **cPanel server using Passenger with Node v20.19.2**. In this environment:
+
+- The `svelte-preprocess` package is incompatible due to **CommonJS/ESM interop issues**.
+- Using `preprocess()` in `svelte.config.js` may cause builds to fail or apps to crash with obscure runtime or build errors.
+
+✅ **Use only this minimal safe configuration** for `svelte.config.js`:
+
+```js
+import adapter from '@sveltejs/adapter-node';
+
+const config = {
+  kit: {
+    adapter: adapter(),
+    paths: {
+      base: '/promptvault'
+    }
+  }
+};
+
+export default config;
+```
+
+**Never** import or configure `svelte-preprocess` or `vitePreprocess`.
