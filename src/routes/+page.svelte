@@ -21,6 +21,7 @@
   let allTags: string[] = [];
   let isHiddenUnlocked = false;
   let hiddenPassword = 'foobar'; // Will be loaded from storage
+  let showAboutModal = false;
 
   function toggleDarkMode() {
     darkMode.update(v => {
@@ -55,13 +56,20 @@
 
   function extractTags() {
     const tagSet = new Set<string>();
+    
+    // Determine if we're in hidden mode (same logic as updateFilteredPrompts)
+    const isInHiddenMode = (selectedTag === 'Hidden' && isHiddenUnlocked) || 
+                          (selectedTag !== 'all' && selectedTag !== 'Hidden' && isHiddenUnlocked);
+    
     prompts.forEach(prompt => {
       // Only include tags from prompts that are visible in current view
-      if (selectedTag === 'hidden') {
+      if (isInHiddenMode) {
+        // We're in hidden mode - only include tags from hidden prompts
         if (prompt.isHidden) {
           prompt.tags.forEach(tag => tagSet.add(tag));
         }
       } else {
+        // We're in regular mode - only include tags from regular prompts
         if (!prompt.isHidden) {
           prompt.tags.forEach(tag => tagSet.add(tag));
         }
@@ -73,19 +81,26 @@
   function updateFilteredPrompts() {
     let filtered = prompts;
     
-    if (selectedTag === 'hidden') {
+    // Determine if we're in hidden mode
+    const isInHiddenMode = (selectedTag === 'Hidden' && isHiddenUnlocked) || 
+                          (selectedTag !== 'all' && selectedTag !== 'Hidden' && isHiddenUnlocked);
+    
+    // First, filter by visibility (hidden vs regular)
+    if (isInHiddenMode) {
+      // We're in hidden mode - show only hidden prompts
       if (!isHiddenUnlocked) {
         filtered = [];
       } else {
         filtered = filtered.filter(prompt => prompt.isHidden);
       }
     } else {
-      // Hide hidden prompts from all other views
+      // We're in regular mode - hide hidden prompts
       filtered = filtered.filter(prompt => !prompt.isHidden);
-      
-      if (selectedTag !== 'all') {
-        filtered = filtered.filter(prompt => prompt.tags.includes(selectedTag));
-      }
+    }
+    
+    // Then apply tag filtering
+    if (selectedTag !== 'all' && selectedTag !== 'Hidden') {
+      filtered = filtered.filter(prompt => prompt.tags.includes(selectedTag));
     }
     
     if (searchQuery) {
@@ -105,7 +120,8 @@
   }
 
   function handleTagFilter(tag: string) {
-    if (tag === 'hidden' && !isHiddenUnlocked) {
+    // Special case: clicking the "Hidden" category button (not a tag named "hidden")
+    if (tag === 'Hidden' && !isHiddenUnlocked) {
       if (!config.isHiddenPromptsEnabled()) {
         alert('Hidden prompts feature is disabled');
         return;
@@ -119,8 +135,14 @@
         return;
       }
     } else {
+      // Check if we're currently in hidden mode (either viewing all hidden or filtering by a tag while unlocked)
+      const isCurrentlyInHiddenMode = (selectedTag === 'Hidden' && isHiddenUnlocked) || 
+                                     (selectedTag !== 'all' && selectedTag !== 'Hidden' && isHiddenUnlocked);
+      
       selectedTag = tag;
-      if (tag !== 'hidden') {
+      
+      // Only reset hidden unlock state if we're switching away from hidden view entirely
+      if (tag !== 'Hidden' && !isCurrentlyInHiddenMode) {
         isHiddenUnlocked = false;
       }
     }
@@ -141,7 +163,7 @@
     loadPrompts();
     loadPassword();
     isHiddenUnlocked = false;
-    if (selectedTag === 'hidden') {
+    if (selectedTag === 'Hidden') {
       selectedTag = 'all';
     }
   }
@@ -180,16 +202,16 @@
       </li>
       {#if config.isHiddenPromptsEnabled()}
         <li>
-          <button 
-            on:click={() => handleTagFilter('hidden')} 
-            class="w-full text-left hover:underline {selectedTag === 'hidden' ? 'font-bold text-blue-600' : ''}"
-          >
-            {#if isHiddenUnlocked && selectedTag === 'hidden'}
-              🔓 Hidden ({prompts.filter(p => p.isHidden).length})
-            {:else}
-              🔒 Hidden ({prompts.filter(p => p.isHidden).length})
-            {/if}
-          </button>
+                  <button 
+          on:click={() => handleTagFilter('Hidden')} 
+          class="w-full text-left hover:underline {selectedTag === 'Hidden' ? 'font-bold text-blue-600' : ''}"
+        >
+          {#if isHiddenUnlocked && selectedTag === 'Hidden'}
+            🔓 Hidden ({prompts.filter(p => p.isHidden).length})
+          {:else}
+            🔒 Hidden ({prompts.filter(p => p.isHidden).length})
+          {/if}
+        </button>
         </li>
       {/if}
       {#each allTags as tag}
@@ -211,6 +233,7 @@
       {#if config.isHiddenPromptsEnabled()}
         <PasswordManager on:passwordReset={handlePasswordReset} />
       {/if}
+      <button on:click={() => showAboutModal = true} class="block text-sm text-gray-600 dark:text-gray-400 underline hover:text-gray-800 dark:hover:text-gray-200">About</button>
     </div>
   </aside>
 
@@ -235,7 +258,7 @@
         <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">
           {#if searchQuery}
             No prompts found matching "<strong>{searchQuery}</strong>"
-          {:else if selectedTag === 'hidden'}
+          {:else if selectedTag === 'Hidden'}
             No hidden prompts found
           {:else if selectedTag !== 'all'}
             No prompts found with tag "<strong>{selectedTag}</strong>"
@@ -257,7 +280,44 @@
             ✕
           </button>
         </div>
-        <CreatePromptForm defaultHidden={selectedTag === 'hidden' && isHiddenUnlocked} on:created={handlePromptCreated} />
+        <CreatePromptForm defaultHidden={selectedTag === 'Hidden' && isHiddenUnlocked} on:created={handlePromptCreated} />
+      </div>
+    </div>
+  {/if}
+
+  <!-- About Modal -->
+  {#if showAboutModal}
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">About</h2>
+          <button on:click={() => showAboutModal = false} class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+            ✕
+          </button>
+        </div>
+        <div class="prose dark:prose-invert max-w-none">
+          
+          <p class="text-gray-700 dark:text-gray-300">
+            <strong>PromptVault</strong> is a modern prompt management tool built by <a href="https://www.linkedin.com/in/douglas-kiang/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">Douglas Kiang</a>. It lets you store, search, tag, and organize your AI prompts in a clean, responsive interface.
+          </p>
+          
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">🔑 Key Features</h3>
+          
+          <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+            <li><strong>🔍 Search & Highlight</strong>: Full-text search across all prompts with keyword highlighting</li>
+            <li><strong>🤖 Chatbot Links</strong>: Open prompts directly in ChatGPT or Perplexity</li>
+            <li><strong>🏷️ Tag System</strong>: Organize prompts with dynamic, auto-updating tags</li>
+            <li><strong>🔒 Hidden Prompts</strong>: Optional password-protected prompts (DevTools activation required)</li>
+            <li><strong>🌙 Dark Mode</strong>: Toggle themes with persistent preferences</li>
+            <li><strong>📤 Import/Export</strong>: Backup or transfer prompts via JSON</li>
+            <li><strong>🔗 Share & Sync</strong>: Generate secure, account-free links to sync across devices</li>
+            <li><strong>✨ Minimal UI</strong>: Content-only display with color-coded actions</li>
+          </ul>
+          
+          <p class="text-gray-700 dark:text-gray-300 mt-6">
+            This is a client-side-only app designed for personal use.<br>For details or support, <a href="https://github.com/dkiang/PromptVault" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">visit the GitHub repo</a>.
+          </p>
+        </div>
       </div>
     </div>
   {/if}
