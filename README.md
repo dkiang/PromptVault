@@ -7,7 +7,7 @@ A modern, feature-rich prompt management application built with SvelteKit. Store
 - **Content-Only Display**: Clean interface showing only prompt content and tags (no titles)
 - **Full-text Search with Highlighting**: Search across all prompt content and tags with visual keyword highlighting
 - **Share/Sync**: Generate secure links to sync prompts across devices without accounts
-- **Chatbot Integration**: Direct links to ChatGPT and Perplexity with pre-filled prompts
+- **Chatbot Integration**: Open prompts directly in ChatGPT or Perplexity using blue underlined text links
 - **Dark Mode**: Toggle between light and dark themes with persistent preference
 - **Tag System**: Organize prompts with custom tags that update based on current view
 - **Hidden Prompts**: Password-protected prompts (password: "foobar") completely separated from regular view
@@ -66,7 +66,7 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 
 ### Managing Prompts
 
-- **Chatbot Integration**: Click **GPT** (green) or **PX** (blue) icons to open prompt in ChatGPT or Perplexity
+- **Chatbot Integration**: Click the blue underlined text links labeled **Open in: ChatGPT | Perplexity** below each prompt to open the prompt in ChatGPT or Perplexity with the content pre-filled.
 - **Copy**: Click the "Copy" button (blue) to copy prompt content to clipboard
 - **Edit**: Click the "Edit" button (purple) to modify content, tags, and hidden status
 - **Delete**: Click the "Delete" button (red) to remove a prompt
@@ -81,6 +81,32 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 
 ### Hidden Prompts
 
+**Note:** The Hidden prompts feature is disabled by default and can only be enabled via browser DevTools.
+
+**To enable Hidden prompts:**
+1. Open your browser's Developer Tools (F12 or right-click → Inspect)
+2. Go to the Console tab
+3. Run this command:
+   ```javascript
+   const config = JSON.parse(localStorage.getItem('promptvault_config') || '{}');
+   config.features = config.features || {};
+   config.features.hiddenPrompts = true;
+   localStorage.setItem('promptvault_config', JSON.stringify(config));
+   location.reload();
+   ```
+4. Refresh the page - the "🔒 Hidden" link will appear in the sidebar
+
+**To disable Hidden prompts:**
+1. In DevTools Console, run:
+   ```javascript
+   const config = JSON.parse(localStorage.getItem('promptvault_config') || '{}');
+   config.features = config.features || {};
+   config.features.hiddenPrompts = false;
+   localStorage.setItem('promptvault_config', JSON.stringify(config));
+   location.reload();
+   ```
+
+**Using Hidden prompts (when enabled):**
 - Click **"🔒 Hidden"** in the sidebar to access password-protected prompts
 - Enter password: **"foobar"** when prompted
 - Hidden prompts are completely separate from regular prompts
@@ -148,7 +174,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## Security Note
 
-PromptVault uses client-side storage and basic password protection suitable for personal use and demo purposes. The hidden prompt password is obfuscated but not truly secure since this is a client-side only application. For production use with sensitive data, consider implementing server-side authentication.
+PromptVault uses client-side storage and basic password protection suitable for personal use and demo purposes. The hidden prompt password is obfuscated but not truly secure since this is a client-side only application. The Hidden prompts feature is disabled by default and requires DevTools access to enable, providing an additional layer of obscurity. For production use with sensitive data, consider implementing server-side authentication.
 
 ## Support
 

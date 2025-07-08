@@ -18,9 +18,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Basic password obfuscation using base64 encoding
 - Share/sync functionality via secure links for cross-device syncing
 - Keyword highlighting in search results (content and tags)
-- Direct chatbot integration (ChatGPT and Perplexity buttons)
+- Direct chatbot integration (ChatGPT and Perplexity) via blue underlined text links
 - Context-aware hidden toggle in create form
 - Rainbow color palette for all action buttons
+- Password management system with change and reset functionality
+- Secure password storage in IndexedDB settings store
+- Password change with current password verification
+- Password reset with deletion of all hidden prompts
+- Comprehensive security warnings for password reset operations
+- Runtime configuration system for feature toggles without recompilation
+- Hidden prompts feature disabled by default (DevTools-only enable)
+- Default password can be changed via configuration interface
 
 ### Changed
 - Replaced "Your Prompts" header with "PromptVault"
@@ -30,6 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Lock icon changes to unlocked when hidden prompts are accessed
 - Button colors follow rainbow palette: Export(Indigo), Import(Orange), Share(Yellow), +New(Green), Copy(Blue), Edit(Purple), Delete(Red)
 - Create prompt form defaults to current view context (hidden toggle matches current mode)
+- Password system now uses IndexedDB storage instead of hardcoded base64 encoding
+- Database version incremented to 2.0 to support password settings store
+- Configuration system uses localStorage for persistent runtime settings
+- All hidden prompts UI elements are conditionally rendered based on configuration
+- Settings UI removed - Hidden feature toggle now DevTools-only
+- Chatbot integration UI now uses blue underlined text links ("Open in: ChatGPT | Perplexity") instead of buttons or icons
 
 ### Removed
 - Title display from prompt cards (content-only view)
@@ -37,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Manual title input field from prompt forms
 - Hidden prompts from main "All Prompts" view
 - Redundant manual sync button (auto-detection handles sync)
+- Settings UI panel and ConfigManager component
 
 ### Fixed
 - Dark mode toggle now properly changes page appearance
@@ -49,4 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Added basic obfuscation for hidden prompt password
 - Share links contain all data encoded in URL (no server required)
+- Password management with secure storage in IndexedDB
+- Current password verification required for all password operations
+- Comprehensive security warnings for destructive operations
 - Note: Client-side only protection, suitable for demo/personal use

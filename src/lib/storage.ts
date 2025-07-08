@@ -1,3 +1,5 @@
+import { config } from './config';
+
 export interface Prompt {
   id: string;
   title: string;
@@ -16,7 +18,7 @@ export interface Tag {
 
 class PromptStorage {
   private dbName = 'promptvault';
-  private dbVersion = 1;
+  private dbVersion = 2; // Increment version for new password store
   private db: IDBDatabase | null = null;
 
   private generateTitleFromContent(content: string): string {
@@ -49,8 +51,74 @@ class PromptStorage {
         if (!db.objectStoreNames.contains('tags')) {
           db.createObjectStore('tags', { keyPath: 'id' });
         }
+
+        // Add password store for hidden prompt password
+        if (!db.objectStoreNames.contains('settings')) {
+          db.createObjectStore('settings', { keyPath: 'key' });
+        }
       };
     });
+  }
+
+  // Password management methods
+  async getHiddenPassword(): Promise<string> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['settings'], 'readonly');
+      const store = transaction.objectStore('settings');
+      const request = store.get('hiddenPassword');
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result && result.value) {
+          resolve(result.value);
+        } else {
+          // Return default password if none is set
+          resolve(config.getDefaultPassword());
+        }
+      };
+    });
+  }
+
+  async setHiddenPassword(newPassword: string): Promise<void> {
+    if (!this.db) await this.init();
+    
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction(['settings'], 'readwrite');
+      const store = transaction.objectStore('settings');
+      const request = store.put({ key: 'hiddenPassword', value: newPassword });
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve();
+    });
+  }
+
+  async resetHiddenPassword(): Promise<void> {
+    if (!this.db) await this.init();
+    
+    // Delete all hidden prompts first
+    const allPrompts = await this.getAllPrompts();
+    const hiddenPrompts = allPrompts.filter(prompt => prompt.isHidden);
+    
+    for (const prompt of hiddenPrompts) {
+      await this.deletePrompt(prompt.id);
+    }
+    
+    // Reset password to default
+    await this.setHiddenPassword(config.getDefaultPassword());
+  }
+
+  async deleteAllHiddenPrompts(): Promise<void> {
+    if (!this.db) await this.init();
+    
+    const allPrompts = await this.getAllPrompts();
+    const hiddenPrompts = allPrompts.filter(prompt => prompt.isHidden);
+    
+    for (const prompt of hiddenPrompts) {
+      await this.deletePrompt(prompt.id);
+    }
   }
 
   async getAllPrompts(): Promise<Prompt[]> {

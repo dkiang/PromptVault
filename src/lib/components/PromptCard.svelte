@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { storage, type Prompt } from '../storage';
+  import { config } from '../config';
   import TagList from './TagList.svelte';
 
   export let prompt: Prompt;
@@ -79,35 +80,35 @@
 
   async function openInChatGPT() {
     const encodedPrompt = encodeURIComponent(prompt.content);
-    // Use 'message' parameter to pre-fill without submitting
-    const chatGPTUrl = `https://chat.openai.com/?message=${encodedPrompt}`;
+    // Use 'prompt' parameter to pre-fill without submitting
+    const chatGPTUrl = `https://chat.openai.com/?prompt=${encodedPrompt}`;
     window.open(chatGPTUrl, '_blank');
   }
 
   async function openInPerplexity() {
     const encodedPrompt = encodeURIComponent(prompt.content);
     // Use 'q' parameter but with a method that doesn't auto-submit
-    const perplexityUrl = `https://www.perplexity.ai/search?q=${encodedPrompt}&focus=internet`;
+    const perplexityUrl = `https://www.perplexity.ai/?q=${encodedPrompt}&focus=internet`;
     window.open(perplexityUrl, '_blank');
   }
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow">
-  <!-- Chatbot Icons -->
-  <div class="flex gap-2 mb-4">
+  <!-- Chatbot Links -->
+  <div class="mb-4 text-sm">
+    <span class="text-gray-600 dark:text-gray-400">Open in: </span>
     <button
       on:click={openInChatGPT}
-      class="flex items-center justify-center w-8 h-8 bg-green-500 hover:bg-green-600 rounded-full text-white font-bold text-sm transition-colors"
-      title="Open in ChatGPT"
+      class="text-blue-600 hover:text-blue-800 underline cursor-pointer bg-transparent border-none p-0 font-inherit"
     >
-      GPT
+      ChatGPT
     </button>
+    <span class="text-gray-600 dark:text-gray-400"> | </span>
     <button
       on:click={openInPerplexity}
-      class="flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 rounded-full text-white font-bold text-sm transition-colors"
-      title="Open in Perplexity"
+      class="text-blue-600 hover:text-blue-800 underline cursor-pointer bg-transparent border-none p-0 font-inherit"
     >
-      PX
+      Perplexity
     </button>
   </div>
   {#if isEditing}
@@ -125,17 +126,19 @@
         placeholder="Tags (comma-separated)"
       />
       
-      <div class="flex items-center">
-        <input
-          id="editIsHidden"
-          type="checkbox"
-          bind:checked={editIsHidden}
-          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        />
-        <label for="editIsHidden" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-          Mark as hidden (password protected)
-        </label>
-      </div>
+      {#if config.isHiddenPromptsEnabled()}
+        <div class="flex items-center">
+          <input
+            id="editIsHidden"
+            type="checkbox"
+            bind:checked={editIsHidden}
+            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label for="editIsHidden" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+            Mark as hidden (password protected)
+          </label>
+        </div>
+      {/if}
       
       <div class="flex gap-2">
         <button

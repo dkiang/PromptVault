@@ -1,24 +1,26 @@
-<script>
+<script lang="ts">
   import { onMount } from 'svelte';
   import { writable } from 'svelte/store';
   import { storage } from '$lib/storage';
+  import { config } from '$lib/config';
   import PromptCard from '$lib/components/PromptCard.svelte';
   import SearchBar from '$lib/components/SearchBar.svelte';
   import CreatePromptForm from '$lib/components/CreatePromptForm.svelte';
   import ExportImport from '$lib/components/ExportImport.svelte';
+  import PasswordManager from '$lib/components/PasswordManager.svelte';
 
   const darkMode = writable(false);
   const modalOpen = writable(false);
 
-  let prompts = [];
-  let filteredPrompts = [];
+  import type { Prompt } from '$lib/storage';
+  
+  let prompts: Prompt[] = [];
+  let filteredPrompts: Prompt[] = [];
   let searchQuery = '';
   let selectedTag = 'all';
-  let allTags = [];
+  let allTags: string[] = [];
   let isHiddenUnlocked = false;
-  
-  // Basic obfuscation - not truly secure, just harder to spot casually
-  const hiddenKey = atob('Zm9vYmFy'); // base64 encoded
+  let hiddenPassword = 'foobar'; // Will be loaded from storage
 
   function toggleDarkMode() {
     darkMode.update(v => {
@@ -43,8 +45,16 @@
     }
   }
 
+  async function loadPassword() {
+    try {
+      hiddenPassword = await storage.getHiddenPassword();
+    } catch (error) {
+      console.error('Failed to load password:', error);
+    }
+  }
+
   function extractTags() {
-    const tagSet = new Set();
+    const tagSet = new Set<string>();
     prompts.forEach(prompt => {
       // Only include tags from prompts that are visible in current view
       if (selectedTag === 'hidden') {
@@ -57,7 +67,7 @@
         }
       }
     });
-    allTags = Array.from(tagSet);
+    allTags = Array.from(tagSet) as string[];
   }
 
   function updateFilteredPrompts() {
@@ -89,15 +99,19 @@
     filteredPrompts = filtered;
   }
 
-  function handleSearch(event) {
+  function handleSearch(event: CustomEvent<string>) {
     searchQuery = event.detail;
     updateFilteredPrompts();
   }
 
-  function handleTagFilter(tag) {
+  function handleTagFilter(tag: string) {
     if (tag === 'hidden' && !isHiddenUnlocked) {
+      if (!config.isHiddenPromptsEnabled()) {
+        alert('Hidden prompts feature is disabled');
+        return;
+      }
       const password = prompt('Enter password to view hidden prompts:');
-      if (password === hiddenKey) {
+      if (password === hiddenPassword) {
         isHiddenUnlocked = true;
         selectedTag = tag;
       } else {
@@ -123,6 +137,15 @@
     loadPrompts();
   }
 
+  function handlePasswordReset() {
+    loadPrompts();
+    loadPassword();
+    isHiddenUnlocked = false;
+    if (selectedTag === 'hidden') {
+      selectedTag = 'all';
+    }
+  }
+
   onMount(() => {
     const storedDarkMode = localStorage.getItem('darkMode');
     if (storedDarkMode) {
@@ -138,6 +161,7 @@
       document.documentElement.classList.add('dark');
     }
     loadPrompts();
+    loadPassword();
   });
 </script>
 
@@ -154,18 +178,20 @@
           All Prompts ({prompts.length})
         </button>
       </li>
-      <li>
-        <button 
-          on:click={() => handleTagFilter('hidden')} 
-          class="w-full text-left hover:underline {selectedTag === 'hidden' ? 'font-bold text-blue-600' : ''}"
-        >
-          {#if isHiddenUnlocked && selectedTag === 'hidden'}
-            🔓 Hidden ({prompts.filter(p => p.isHidden).length})
-          {:else}
-            🔒 Hidden ({prompts.filter(p => p.isHidden).length})
-          {/if}
-        </button>
-      </li>
+      {#if config.isHiddenPromptsEnabled()}
+        <li>
+          <button 
+            on:click={() => handleTagFilter('hidden')} 
+            class="w-full text-left hover:underline {selectedTag === 'hidden' ? 'font-bold text-blue-600' : ''}"
+          >
+            {#if isHiddenUnlocked && selectedTag === 'hidden'}
+              🔓 Hidden ({prompts.filter(p => p.isHidden).length})
+            {:else}
+              🔒 Hidden ({prompts.filter(p => p.isHidden).length})
+            {/if}
+          </button>
+        </li>
+      {/if}
       {#each allTags as tag}
         <li>
           <button 
@@ -180,7 +206,12 @@
     <div class="mt-6">
       <SearchBar on:search={handleSearch} bind:value={searchQuery} />
     </div>
-    <button on:click={toggleDarkMode} class="mt-6 text-sm text-gray-600 dark:text-gray-400 underline">Toggle Dark Mode</button>
+    <div class="mt-6 space-y-2">
+      <button on:click={toggleDarkMode} class="block text-sm text-gray-600 dark:text-gray-400 underline hover:text-gray-800 dark:hover:text-gray-200">Toggle Dark Mode</button>
+      {#if config.isHiddenPromptsEnabled()}
+        <PasswordManager on:passwordReset={handlePasswordReset} />
+      {/if}
+    </div>
   </aside>
 
   <!-- Main Content -->

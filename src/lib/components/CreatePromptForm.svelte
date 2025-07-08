@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { storage } from '../storage';
+  import { config } from '../config';
 
   export let defaultHidden: boolean = false;
 
@@ -73,17 +74,19 @@
       />
     </div>
     
-    <div class="flex items-center">
-      <input
-        id="isHidden"
-        type="checkbox"
-        bind:checked={isHidden}
-        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-      />
-      <label for="isHidden" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-        Mark as hidden (password protected)
-      </label>
-    </div>
+    {#if config.isHiddenPromptsEnabled()}
+      <div class="flex items-center">
+        <input
+          id="isHidden"
+          type="checkbox"
+          bind:checked={isHidden}
+          class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label for="isHidden" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          Mark as hidden (password protected)
+        </label>
+      </div>
+    {/if}
     
     <div class="flex justify-end">
       <button
