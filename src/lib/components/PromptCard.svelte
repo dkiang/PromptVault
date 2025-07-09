@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { storage, type Prompt } from '../storage';
   import { config } from '../config';
   import TagList from './TagList.svelte';
+  import { getAIService, AIService } from '../ai';
+  import TagSuggestions from './TagSuggestions.svelte';
 
   export let prompt: Prompt;
   export let searchQuery: string = '';
+  export let allTags: string[] = [];
 
   const dispatch = createEventDispatcher();
 
@@ -14,6 +17,14 @@
   let editContent = prompt.content;
   let editTags = prompt.tags.join(', ');
   let editIsHidden = prompt.isHidden;
+  let editTagSuggestions: string[] = [];
+  let isGeneratingEditSuggestions = false;
+  let editSuggestionTimeout: number | null = null;
+  let aiService: AIService | null = null;
+
+  onMount(() => {
+    aiService = getAIService();
+  });
 
   $: truncatedContent = prompt.content.length > 150 
     ? prompt.content.substring(0, 150) + '...'
@@ -91,6 +102,55 @@
     const perplexityUrl = `https://www.perplexity.ai/?q=${encodedPrompt}&focus=internet`;
     window.open(perplexityUrl, '_blank');
   }
+
+  // Debounced function to generate tag suggestions for edit mode
+  async function generateEditTagSuggestions() {
+    if (!aiService || !aiService.isAIAvailable() || !editContent.trim() || editContent.length < 10) {
+      editTagSuggestions = [];
+      return;
+    }
+
+    // Clear existing timeout
+    if (editSuggestionTimeout) {
+      clearTimeout(editSuggestionTimeout);
+    }
+
+    // Set new timeout for debouncing
+    editSuggestionTimeout = setTimeout(async () => {
+      isGeneratingEditSuggestions = true;
+      try {
+        const currentTags = editTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        const suggestions = await aiService.suggestTags(editContent, currentTags, allTags);
+        editTagSuggestions = suggestions.filter(suggestion => !currentTags.includes(suggestion));
+      } catch (error) {
+        console.error('Failed to generate edit tag suggestions:', error);
+        editTagSuggestions = [];
+      } finally {
+        isGeneratingEditSuggestions = false;
+      }
+    }, 1000); // Wait 1 second after user stops typing
+  }
+
+  // Watch for edit content changes to trigger suggestions
+  $: if (isEditing && editContent) {
+    generateEditTagSuggestions();
+  }
+
+  function addEditSuggestionToTags(suggestion: string) {
+    // Split tags, trim, and filter out empty
+    let currentTags = editTags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    // Only add if not already present
+    if (!currentTags.includes(suggestion)) {
+      // If editTags is empty or ends with a comma/space, just append
+      if (!editTags.trim() || /[,  ]$/.test(editTags)) {
+        editTags = editTags + suggestion + ', ';
+      } else {
+        editTags = editTags + ', ' + suggestion + ', ';
+      }
+      // Remove duplicate commas/spaces
+      editTags = editTags.replace(/,+/g, ',').replace(/,\s*,/g, ', ').replace(/\s+,/g, ',').replace(/,\s*$/, ', ');
+    }
+  }
 </script>
 
 <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-lg transition-shadow">
@@ -124,6 +184,14 @@
         bind:value={editTags}
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         placeholder="Tags (comma-separated)"
+      />
+      
+      <!-- AI Tag Suggestions for Edit Mode -->
+      <TagSuggestions 
+        suggestions={editTagSuggestions}
+        selectedTags={editTags.split(',').map(tag => tag.trim()).filter(tag => tag)}
+        isLoading={isGeneratingEditSuggestions}
+        on:addTag={(event) => addEditSuggestionToTags(event.detail)}
       />
       
       {#if config.isHiddenPromptsEnabled()}

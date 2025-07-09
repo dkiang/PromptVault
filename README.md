@@ -4,16 +4,21 @@ A modern, feature-rich prompt management application built with SvelteKit. Store
 
 ## Features
 
+- **🤖 AI-Powered Auto-Tagging**: OpenAI integration for intelligent tag suggestions
+  - Real-time tag suggestions as you type prompts
+  - Click-to-add functionality for suggested tags
+  - Works in both create and edit modes
+  - AI tag suggestions now prefer or match your existing tags (including synonyms) wherever possible
+  - Secure API key management in the Settings modal
 - **Content-Only Display**: Clean interface showing only prompt content and tags (no titles)
 - **Full-text Search with Highlighting**: Search across all prompt content and tags with visual keyword highlighting
-- **Share/Sync**: Generate secure links to sync prompts across devices without accounts
 - **Chatbot Integration**: Open prompts directly in ChatGPT or Perplexity using blue underlined text links
 - **Dark Mode**: Toggle between light and dark themes with persistent preference
 - **Tag System**: Organize prompts with custom tags that update based on current view
 - **Hidden Prompts**: Password-protected prompts (password: "foobar") completely separated from regular view
 - **Context-Aware Interface**: Tags, search scope, and create form automatically adjust to current view
 - **Rainbow UI**: Color-coded action buttons for intuitive navigation
-- **Export/Import**: Backup and restore your prompts via JSON files
+- **Export/Import**: Backup and restore your prompts via JSON files (now in the Settings modal)
 - **Edit Mode**: Full editing capabilities including hidden status toggle
 - **Mobile-First Responsive Design**: Fully optimized for mobile, tablet, and desktop devices
 - **Touch-Optimized Interface**: 44px minimum touch targets and mobile-friendly interactions
@@ -73,15 +78,11 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 - **Edit**: Click the "Edit" button (purple) to modify content, tags, and hidden status
 - **Delete**: Click the "Delete" button (red) to remove a prompt
 
-### Sharing & Syncing
+### Data Management (Export/Import)
 
-Export, Import, and Share functions are located in the sidebar under the "Data Management" section:
-
-- **Export**: Click "Export" (indigo) to download prompts as JSON file
-- **Import**: Click "Import" (orange) to upload prompts from JSON file
-- **Share**: Click "Share" (yellow) to generate a secure link containing all prompts
-- **Auto-sync**: Opening a share link automatically prompts to import prompts
-- **Cross-device**: Share links work across any device/browser without accounts
+- Go to the **Settings** modal (⚙️ Settings in the sidebar)
+- Use the **Export** button to download prompts as a JSON file
+- Use the **Import** button to upload prompts from a JSON file
 
 ### Hidden Prompts
 
@@ -117,6 +118,28 @@ Export, Import, and Share functions are located in the sidebar under the "Data M
 - Lock icon changes to 🔓 when unlocked
 - Switching away from hidden view automatically locks it again
 - Creating prompts in hidden mode automatically sets them as hidden
+
+### AI-Powered Auto-Tagging
+
+**Setup (Required for AI features):**
+1. Get an OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Open the **Settings** modal (⚙️ Settings in the sidebar)
+3. Enter your API key and click "Save Key"
+4. AI features will be enabled automatically after validation
+
+**Using AI Tag Suggestions:**
+- **Create Mode**: Start typing a prompt (10+ characters) and AI will suggest relevant tags
+- **Edit Mode**: When editing existing prompts, AI will suggest additional tags
+- **Smart Suggestions**: AI analyzes your prompt content and suggests 3-8 relevant tags, preferring your existing tags and matching synonyms
+- **Click to Add**: Click any suggested tag to add it to your prompt instantly
+- **Debounced Requests**: AI suggestions appear 1 second after you stop typing
+- **Context Aware**: AI considers existing tags when suggesting new ones
+- **Privacy First**: All AI processing uses your own API key, no data sent to external servers
+
+**AI Settings Management:**
+- **API Key Management**: Enter, save, and clear your OpenAI API key in the Settings modal
+- **Status Indicator**: Shows whether AI features are enabled or disabled (validated)
+- **Secure Storage**: API key is stored locally in your browser
 
 ### Dark Mode & UI
 
@@ -155,7 +178,6 @@ PromptVault is built mobile-first with extensive responsive design optimizations
 ### Cross-Device Experience
 - **Consistent Functionality**: All features work identically across desktop, tablet, and mobile
 - **Responsive Modals**: Forms and dialogs adapt to screen size with proper mobile scrolling
-- **Share Link Optimization**: Long URLs wrap properly and copy buttons are touch-friendly
 
 ## Development
 
@@ -195,6 +217,7 @@ src/
 - **Tailwind CSS**: Utility-first CSS framework
 - **IndexedDB**: Client-side storage
 - **Vite**: Build tool and development server
+- **OpenAI API**: GPT-3.5-turbo for intelligent tag suggestions
 
 ## Contributing
 

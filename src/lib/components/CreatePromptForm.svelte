@@ -1,9 +1,12 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { onMount, createEventDispatcher } from 'svelte';
   import { storage } from '../storage';
   import { config } from '../config';
+  import { getAIService, AIService } from '../ai';
+  import TagSuggestions from './TagSuggestions.svelte';
 
   export let defaultHidden: boolean = false;
+  export let allTags: string[] = [];
 
   const dispatch = createEventDispatcher();
 
@@ -11,6 +14,63 @@
   let tags = '';
   let isHidden = defaultHidden;
   let isSubmitting = false;
+  let tagSuggestions: string[] = [];
+  let isGeneratingSuggestions = false;
+  let suggestionTimeout: number | null = null;
+  let aiService: AIService | null = null;
+
+  onMount(() => {
+    aiService = getAIService();
+  });
+
+  // Debounced function to generate tag suggestions
+  async function generateTagSuggestions() {
+    if (!aiService || !aiService.isAIAvailable() || !content.trim() || content.length < 10) {
+      tagSuggestions = [];
+      return;
+    }
+
+    // Clear existing timeout
+    if (suggestionTimeout) {
+      clearTimeout(suggestionTimeout);
+    }
+
+    // Set new timeout for debouncing
+    suggestionTimeout = setTimeout(async () => {
+      isGeneratingSuggestions = true;
+      try {
+        const currentTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        const suggestions = await aiService.suggestTags(content, currentTags, allTags);
+        tagSuggestions = suggestions.filter(suggestion => !currentTags.includes(suggestion));
+      } catch (error) {
+        console.error('Failed to generate tag suggestions:', error);
+        tagSuggestions = [];
+      } finally {
+        isGeneratingSuggestions = false;
+      }
+    }, 1000); // Wait 1 second after user stops typing
+  }
+
+  // Watch for content changes to trigger suggestions
+  $: if (content) {
+    generateTagSuggestions();
+  }
+
+  function addSuggestionToTags(suggestion: string) {
+    // Split tags, trim, and filter out empty
+    let currentTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    // Only add if not already present
+    if (!currentTags.includes(suggestion)) {
+      // If tags is empty or ends with a comma/space, just append
+      if (!tags.trim() || /[,\s]$/.test(tags)) {
+        tags = tags + suggestion + ', ';
+      } else {
+        tags = tags + ', ' + suggestion + ', ';
+      }
+      // Remove duplicate commas/spaces
+      tags = tags.replace(/,+/g, ',').replace(/,\s*,/g, ', ').replace(/\s+,/g, ',').replace(/,\s*$/, ', ');
+    }
+  }
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
@@ -33,6 +93,7 @@
       content = '';
       tags = '';
       isHidden = defaultHidden;
+      tagSuggestions = [];
       
       dispatch('created');
     } catch (error) {
@@ -71,6 +132,14 @@
         bind:value={tags}
         class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         placeholder="writing, creative, technical..."
+      />
+      
+      <!-- AI Tag Suggestions -->
+      <TagSuggestions 
+        suggestions={tagSuggestions}
+        selectedTags={tags.split(',').map(tag => tag.trim()).filter(tag => tag)}
+        isLoading={isGeneratingSuggestions}
+        on:addTag={(event) => addSuggestionToTags(event.detail)}
       />
     </div>
     

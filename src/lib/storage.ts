@@ -293,47 +293,6 @@ class PromptStorage {
       });
     }
   }
-
-  async generateShareLink(): Promise<string> {
-    const prompts = await this.getAllPrompts();
-    const data = JSON.stringify(prompts);
-    const encoded = btoa(encodeURIComponent(data));
-    const shareId = crypto.randomUUID();
-    
-    // Store the data temporarily in sessionStorage with the shareId
-    sessionStorage.setItem(`share_${shareId}`, encoded);
-    
-    const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}?share=${shareId}`;
-  }
-
-  async loadFromShareLink(shareId: string): Promise<Prompt[]> {
-    // First try to get from sessionStorage (same session)
-    const sessionData = sessionStorage.getItem(`share_${shareId}`);
-    if (sessionData) {
-      const decoded = decodeURIComponent(atob(sessionData));
-      return JSON.parse(decoded);
-    }
-    
-    // If not found, try to extract from URL hash (for cross-device sharing)
-    const urlParams = new URLSearchParams(window.location.search);
-    const hashData = urlParams.get('data');
-    if (hashData) {
-      const decoded = decodeURIComponent(atob(hashData));
-      return JSON.parse(decoded);
-    }
-    
-    throw new Error('Share data not found');
-  }
-
-  async generateSecureShareLink(): Promise<string> {
-    const prompts = await this.getAllPrompts();
-    const data = JSON.stringify(prompts);
-    const encoded = btoa(encodeURIComponent(data));
-    
-    const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}?data=${encoded}`;
-  }
 }
 
 export const storage = new PromptStorage();

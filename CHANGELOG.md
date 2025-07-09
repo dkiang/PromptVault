@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **🤖 AI-Powered Auto-Tagging**: OpenAI integration for intelligent tag suggestions
+  - Real-time tag suggestions as you type prompts
+  - Debounced API calls to prevent excessive requests
+  - Click-to-add functionality for suggested tags
+  - Works in both create and edit modes
+  - AI tag suggestions now prefer or match your existing tags (including synonyms) wherever possible
+  - Secure API key management in the Settings modal
 - Dark mode functionality with persistent theme preference and proper Tailwind CSS configuration
 - Enhanced full-text search across all prompt content and tags with keyword highlighting
 - Support for multiple search terms (AND logic)
@@ -16,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hidden toggle in edit mode for existing prompts
 - Context-aware tag filtering (tags only show for current view)
 - Basic password obfuscation using base64 encoding
-- Share/sync functionality via secure links for cross-device syncing
+- Data Management (Export/Import) via JSON files, now in the Settings modal
 - Keyword highlighting in search results (content and tags)
 - Direct chatbot integration (ChatGPT and Perplexity) via blue underlined text links
 - Context-aware hidden toggle in create form
@@ -42,18 +49,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Search is scoped to current view (hidden vs regular prompts)
 - Tag list dynamically updates based on current view
 - Lock icon changes to unlocked when hidden prompts are accessed
-- Button colors follow rainbow palette: Export(Indigo), Import(Orange), Share(Yellow), +New(Green), Copy(Blue), Edit(Purple), Delete(Red)
+- Button colors follow rainbow palette: Export(Indigo), Import(Orange), +New(Green), Copy(Blue), Edit(Purple), Delete(Red)
 - Create prompt form defaults to current view context (hidden toggle matches current mode)
 - Password system now uses IndexedDB storage instead of hardcoded base64 encoding
 - Database version incremented to 2.0 to support password settings store
 - Configuration system uses localStorage for persistent runtime settings
 - All hidden prompts UI elements are conditionally rendered based on configuration
-- Settings UI removed - Hidden feature toggle now DevTools-only
+- Settings UI is now a modal accessible from the sidebar
 - Chatbot integration UI now uses blue underlined text links ("Open in: ChatGPT | Perplexity") instead of buttons or icons
 - **Desktop layout: Sidebar always visible on large screens with proper content flow**
 - **Mobile layout: Collapsible sidebar with overlay for small screens**
 - **Dark mode toggle: Dynamic text and emoji based on current mode (🌙 Dark Mode / 🌞 Light Mode)**
-- **Export/Import/Share buttons moved to sidebar under "Data Management" section**
+- **Export/Import buttons moved to Settings modal**
 - **New Prompt button enlarged for better readability on all devices**
 - **Removed underlines from sidebar navigation links for cleaner appearance**
 
@@ -64,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hidden prompts from main "All Prompts" view
 - Redundant manual sync button (auto-detection handles sync)
 - Settings UI panel and ConfigManager component
+- All Share/Sync and share link functionality
 
 ### Fixed
 - Dark mode toggle now properly changes page appearance
@@ -77,11 +85,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Touch target accessibility with proper minimum sizes**
 - **Modal overflow and scrolling on mobile devices**
 - **Responsive text sizing and spacing for different screen sizes**
+- **AI tag suggestion buttons in Create form no longer close the modal**
 
 ### Security
 - Added basic obfuscation for hidden prompt password
-- Share links contain all data encoded in URL (no server required)
 - Password management with secure storage in IndexedDB
 - Current password verification required for all password operations
 - Comprehensive security warnings for destructive operations
+- **OpenAI API key stored securely in localStorage**
 - Note: Client-side only protection, suitable for demo/personal use
+
+### AI Features
+- **OpenAI Integration**: GPT-3.5-turbo powered tag suggestions
+- **Smart Tag Analysis**: AI analyzes prompt content to suggest relevant tags
+- **Context-Aware Suggestions**: Considers existing tags when generating new suggestions
+- **Prefers existing tags and matches synonyms where possible**
+- **Debounced Requests**: 1-second delay prevents excessive API calls
+- **Error Handling**: Graceful fallback when AI service is unavailable
+- **Privacy-First**: All AI processing happens client-side with user's own API key

@@ -1,10 +1,10 @@
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-auto';
 
 const config = {
   kit: {
     adapter: adapter(),
     paths: {
-      base: '/promptvault'
+      base: process.env.NODE_ENV === 'production' ? '/promptvault' : ''
     }
   }
 };

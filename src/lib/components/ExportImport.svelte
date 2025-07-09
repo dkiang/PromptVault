@@ -4,23 +4,17 @@
   let fileInput: HTMLInputElement;
   let isExporting = false;
   let isImporting = false;
-  let isGeneratingLink = false;
-  let shareLink = '';
-  let showShareModal = false;
 
   async function exportPrompts() {
     isExporting = true;
-    
     try {
       const data = await storage.exportPrompts();
       const blob = new Blob([data], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
       const a = document.createElement('a');
       a.href = url;
       a.download = `promptvault-export-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
-      
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Export failed:', error);
@@ -36,15 +30,11 @@
   async function handleFileSelected(event: Event) {
     const target = event.target as HTMLInputElement;
     const file = target.files?.[0];
-    
     if (!file) return;
-    
     isImporting = true;
-    
     try {
       const text = await file.text();
       await storage.importPrompts(text);
-      
       window.location.reload();
     } catch (error) {
       console.error('Import failed:', error);
@@ -54,69 +44,6 @@
       target.value = '';
     }
   }
-
-  async function generateShareLink() {
-    isGeneratingLink = true;
-    
-    try {
-      shareLink = await storage.generateSecureShareLink();
-      showShareModal = true;
-    } catch (error) {
-      console.error('Failed to generate share link:', error);
-      alert('Failed to generate share link');
-    } finally {
-      isGeneratingLink = false;
-    }
-  }
-
-  async function copyShareLink() {
-    try {
-      await navigator.clipboard.writeText(shareLink);
-      alert('Share link copied to clipboard!');
-    } catch (error) {
-      console.error('Failed to copy link:', error);
-      alert('Failed to copy link');
-    }
-  }
-
-  async function syncFromUrl() {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shareData = urlParams.get('data');
-      
-      if (shareData) {
-        const confirmSync = confirm('This will import prompts from the shared link. Continue?');
-        if (confirmSync) {
-          const decoded = decodeURIComponent(atob(shareData));
-          await storage.importPrompts(decoded);
-          
-          // Clean up URL
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
-          
-          window.location.reload();
-        }
-      }
-    } catch (error) {
-      console.error('Sync failed:', error);
-      alert('Failed to sync prompts from link');
-    }
-  }
-
-  function closeShareModal() {
-    showShareModal = false;
-    shareLink = '';
-  }
-  
-  // Auto-detect share link on load
-  import { onMount } from 'svelte';
-  
-  onMount(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('data')) {
-      syncFromUrl();
-    }
-  });
 </script>
 
 <div class="space-y-2">
@@ -135,14 +62,6 @@
   >
     {isImporting ? 'Importing...' : 'Import'}
   </button>
-  
-  <button
-    on:click={generateShareLink}
-    disabled={isGeneratingLink}
-    class="w-full px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm min-h-[44px] touch-manipulation"
-  >
-    {isGeneratingLink ? 'Generating...' : 'Share'}
-  </button>
 </div>
 
 <input
@@ -152,42 +71,3 @@
   on:change={handleFileSelected}
   class="hidden"
 />
-
-<!-- Share Modal -->
-{#if showShareModal}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-    <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-md w-full max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Share Your Prompts</h3>
-        <button on:click={closeShareModal} class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-          ✕
-        </button>
-      </div>
-      
-      <div class="space-y-4">
-        <p class="text-sm text-gray-600 dark:text-gray-400">
-          Copy this link to share your prompts across devices. The link contains all your prompts encoded in the URL.
-        </p>
-        
-        <div class="flex gap-2 flex-col sm:flex-row">
-          <input
-            type="text"
-            value={shareLink}
-            readonly
-            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none text-sm break-all"
-          />
-          <button
-            on:click={copyShareLink}
-            class="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm min-h-[44px] touch-manipulation whitespace-nowrap"
-          >
-            Copy
-          </button>
-        </div>
-        
-        <p class="text-xs text-gray-500 dark:text-gray-400">
-          Note: Hidden prompts are included in the share link. Anyone with this link can access all your prompts.
-        </p>
-      </div>
-    </div>
-  </div>
-{/if}

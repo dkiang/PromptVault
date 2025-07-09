@@ -8,6 +8,8 @@
   import CreatePromptForm from '$lib/components/CreatePromptForm.svelte';
   import ExportImport from '$lib/components/ExportImport.svelte';
   import PasswordManager from '$lib/components/PasswordManager.svelte';
+  import AISettings from '$lib/components/AISettings.svelte';
+  import SettingsModal from '$lib/components/SettingsModal.svelte';
 
   const darkMode = writable(false);
   const modalOpen = writable(false);
@@ -25,6 +27,7 @@
   let isHiddenUnlocked = false;
   let hiddenPassword = 'foobar'; // Will be loaded from storage
   let showAboutModal = false;
+  let showSettingsModal = false;
 
   function toggleDarkMode() {
     darkMode.update(v => {
@@ -293,12 +296,6 @@
       </ul>
     </div>
     
-    <!-- Data Management -->
-    <div class="mb-6">
-      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Data Management</h3>
-      <ExportImport />
-    </div>
-    
     <!-- Settings -->
     <div class="mb-6 space-y-2">
       <button on:click={toggleDarkMode} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
@@ -308,14 +305,12 @@
           🌙 Dark Mode
         {/if}
       </button>
-      {#if config.isHiddenPromptsEnabled()}
-        <PasswordManager on:passwordReset={handlePasswordReset} />
-      {/if}
+      <button on:click={() => showSettingsModal = true} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+        ⚙️ Settings
+      </button>
     </div>
-    
-    <!-- About -->
-    <div>
-      <button on:click={() => showAboutModal = true} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">About</button>
+    <div class="mt-8">
+      <button on:click={() => showAboutModal = true} class="block w-full text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-left">About this app</button>
     </div>
   </aside>
 
@@ -340,7 +335,7 @@
 
     <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       {#each filteredPrompts as prompt (prompt.id)}
-        <PromptCard {prompt} {searchQuery} on:update={handlePromptUpdated} />
+        <PromptCard {prompt} {searchQuery} allTags={allTags} on:update={handlePromptUpdated} />
       {/each}
       
       {#if filteredPrompts.length === 0}
@@ -369,7 +364,7 @@
             ✕
           </button>
         </div>
-        <CreatePromptForm defaultHidden={selectedTag === 'Hidden' && isHiddenUnlocked} on:created={handlePromptCreated} />
+        <CreatePromptForm defaultHidden={selectedTag === 'Hidden' && isHiddenUnlocked} allTags={allTags} on:created={handlePromptCreated} />
       </div>
     </div>
   {/if}
@@ -385,29 +380,31 @@
           </button>
         </div>
         <div class="prose dark:prose-invert max-w-none">
-          
           <p class="text-gray-700 dark:text-gray-300">
             <strong>PromptVault</strong> is a modern prompt management tool built by <a href="https://www.linkedin.com/in/douglas-kiang/" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">Douglas Kiang</a>. It lets you store, search, tag, and organize your AI prompts in a clean, responsive interface.
           </p>
-          
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">🔑 Key Features</h3>
-          
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-6 mb-3">�� Key Features</h3>
           <ul class="space-y-2 text-gray-700 dark:text-gray-300">
             <li><strong>🔍 Search & Highlight</strong>: Full-text search across all prompts with keyword highlighting</li>
+            <li><strong>🤖 AI Auto-Tagging</strong>: OpenAI-powered tag suggestions as you type prompts, now preferring your existing tags and matching synonyms</li>
             <li><strong>🤖 Chatbot Links</strong>: Open prompts directly in ChatGPT or Perplexity</li>
             <li><strong>🏷️ Tag System</strong>: Organize prompts with dynamic, auto-updating tags</li>
             <li><strong>🔒 Hidden Prompts</strong>: Optional password-protected prompts (DevTools activation required)</li>
             <li><strong>🌙 Dark Mode</strong>: Toggle themes with persistent preferences</li>
-            <li><strong>📤 Import/Export</strong>: Backup or transfer prompts via JSON</li>
-            <li><strong>🔗 Share & Sync</strong>: Generate secure, account-free links to sync across devices</li>
+            <li><strong>📤 Import/Export</strong>: Backup or transfer prompts via JSON (in Settings modal)</li>
+            <li><strong>⚙️ Settings Modal</strong>: Manage AI features, data export/import, and password options in one place</li>
             <li><strong>✨ Minimal UI</strong>: Content-only display with color-coded actions</li>
           </ul>
-          
           <p class="text-gray-700 dark:text-gray-300 mt-6">
             This is a client-side-only app designed for personal use.<br>For details or support, <a href="https://github.com/dkiang/PromptVault" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">visit the GitHub repo</a>.
           </p>
         </div>
       </div>
     </div>
+  {/if}
+
+  <!-- Settings Modal -->
+  {#if showSettingsModal}
+    <SettingsModal show={showSettingsModal} isHiddenEnabled={config.isHiddenPromptsEnabled()} on:close={() => showSettingsModal = false} />
   {/if}
 </main>
