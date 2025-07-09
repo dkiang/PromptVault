@@ -86,7 +86,7 @@
         }
       }
     });
-    allTags = Array.from(tagSet) as string[];
+    allTags = Array.from(tagSet).sort() as string[];
   }
 
   function updateFilteredPrompts() {
@@ -245,8 +245,8 @@
   
   <!-- Sidebar -->
   <aside class="w-64 h-full bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto z-50 transition-transform duration-300 ease-in-out {isDesktop ? 'static lg:z-auto lg:transition-none lg:transform-none' : 'fixed left-0 top-0 z-50 ' + ($sidebarOpen ? 'translate-x-0' : '-translate-x-full')}" on:click|stopPropagation>
-    <h2 class="text-xl font-bold mb-4">Tags</h2>
-    <ul class="space-y-2">
+    <!-- All Prompts -->
+    <ul class="space-y-2 mb-6">
       <li>
         <button 
           on:click={() => handleTagFilter('all')} 
@@ -257,40 +257,50 @@
       </li>
       {#if config.isHiddenPromptsEnabled()}
         <li>
-                  <button 
-          on:click={() => handleTagFilter('Hidden')} 
-          class="w-full text-left hover:underline {selectedTag === 'Hidden' ? 'font-bold text-blue-600' : ''}"
-        >
-          {#if isHiddenUnlocked && selectedTag === 'Hidden'}
-            🔓 Hidden ({prompts.filter(p => p.isHidden).length})
-          {:else}
-            🔒 Hidden ({prompts.filter(p => p.isHidden).length})
-          {/if}
-        </button>
-        </li>
-      {/if}
-      {#each allTags as tag}
-        <li>
           <button 
-            on:click={() => handleTagFilter(tag)} 
-            class="w-full text-left hover:underline {selectedTag === tag ? 'font-bold text-blue-600' : ''}"
+            on:click={() => handleTagFilter('Hidden')} 
+            class="w-full text-left hover:underline {selectedTag === 'Hidden' ? 'font-bold text-blue-600' : ''}"
           >
-            {tag} ({prompts.filter(p => p.tags.includes(tag)).length})
+            {#if isHiddenUnlocked && selectedTag === 'Hidden'}
+              🔓 Hidden ({prompts.filter(p => p.isHidden).length})
+            {:else}
+              🔒 Hidden ({prompts.filter(p => p.isHidden).length})
+            {/if}
           </button>
         </li>
-      {/each}
+      {/if}
     </ul>
-    <div class="mt-6">
+    
+    <!-- Search Bar -->
+    <div class="mb-6">
       <SearchBar on:search={handleSearch} bind:value={searchQuery} />
     </div>
     
+    <!-- Tags Section -->
+    <div class="mb-6">
+      <h2 class="text-xl font-bold mb-4">Tags</h2>
+      <ul class="space-y-2">
+        {#each allTags as tag}
+          <li>
+            <button 
+              on:click={() => handleTagFilter(tag)} 
+              class="w-full text-left hover:underline {selectedTag === tag ? 'font-bold text-blue-600' : ''}"
+            >
+              {tag} ({prompts.filter(p => p.tags.includes(tag)).length})
+            </button>
+          </li>
+        {/each}
+      </ul>
+    </div>
+    
     <!-- Data Management -->
-    <div class="mt-6">
+    <div class="mb-6">
       <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Data Management</h3>
       <ExportImport />
     </div>
     
-    <div class="mt-6 space-y-2">
+    <!-- Settings -->
+    <div class="mb-6 space-y-2">
       <button on:click={toggleDarkMode} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
         {#if $darkMode}
           🌞 Light Mode
@@ -301,6 +311,10 @@
       {#if config.isHiddenPromptsEnabled()}
         <PasswordManager on:passwordReset={handlePasswordReset} />
       {/if}
+    </div>
+    
+    <!-- About -->
+    <div>
       <button on:click={() => showAboutModal = true} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">About</button>
     </div>
   </aside>

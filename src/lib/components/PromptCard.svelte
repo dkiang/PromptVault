@@ -99,14 +99,14 @@
     <span class="text-gray-600 dark:text-gray-400">Open in: </span>
     <button
       on:click={openInChatGPT}
-      class="text-blue-600 hover:text-blue-800 underline cursor-pointer bg-transparent border-none p-1 font-inherit touch-manipulation"
+      class="text-blue-600 hover:text-blue-800 cursor-pointer bg-transparent border-none p-1 font-inherit touch-manipulation"
     >
       ChatGPT
     </button>
     <span class="text-gray-600 dark:text-gray-400"> | </span>
     <button
       on:click={openInPerplexity}
-      class="text-blue-600 hover:text-blue-800 underline cursor-pointer bg-transparent border-none p-1 font-inherit touch-manipulation"
+      class="text-blue-600 hover:text-blue-800 cursor-pointer bg-transparent border-none p-1 font-inherit touch-manipulation"
     >
       Perplexity
     </button>
