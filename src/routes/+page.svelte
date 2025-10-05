@@ -28,6 +28,7 @@
   let hiddenPassword = 'foobar'; // Will be loaded from storage
   let showAboutModal = false;
   let showSettingsModal = false;
+  let showDomainTransferWarning = false;
 
   function toggleDarkMode() {
     darkMode.update(v => {
@@ -193,6 +194,16 @@
     }
   }
 
+  function dismissDomainTransferWarning() {
+    showDomainTransferWarning = false;
+    localStorage.setItem('domainTransferWarningDismissed', 'true');
+  }
+
+  function openSettingsForBackup() {
+    showDomainTransferWarning = false;
+    showSettingsModal = true;
+  }
+
   onMount(() => {
     // Check if desktop on mount
     isDesktop = window.innerWidth >= 1024;
@@ -210,6 +221,8 @@
           modalOpen.set(false);
         } else if (showAboutModal) {
           showAboutModal = false;
+        } else if (showDomainTransferWarning) {
+          showDomainTransferWarning = false;
         } else if ($sidebarOpen && !isDesktop) {
           closeSidebar();
         }
@@ -232,6 +245,12 @@
     }
     loadPrompts();
     loadPassword();
+
+    // Check if domain transfer warning should be shown
+    const warningDismissed = localStorage.getItem('domainTransferWarningDismissed');
+    if (!warningDismissed) {
+      showDomainTransferWarning = true;
+    }
     
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -406,5 +425,48 @@
   <!-- Settings Modal -->
   {#if showSettingsModal}
     <SettingsModal show={showSettingsModal} isHiddenEnabled={config.isHiddenPromptsEnabled()} on:close={() => showSettingsModal = false} />
+  {/if}
+
+  <!-- Domain Transfer Warning Modal -->
+  {#if showDomainTransferWarning}
+    <div class="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-[70] p-4">
+      <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-lg w-full">
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0 w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center mr-3">
+            <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900 dark:text-white">⚠️ Important: Backup Your Prompts</h2>
+        </div>
+
+        <div class="mb-6">
+          <p class="text-gray-700 dark:text-gray-300 mb-4">
+            This site is undergoing a domain transfer on <strong>October 6th</strong>.
+          </p>
+          <p class="text-gray-700 dark:text-gray-300 mb-4">
+            <strong>Your saved prompts may be lost</strong> because they are stored locally in your browser and are tied to this domain.
+          </p>
+          <p class="text-gray-700 dark:text-gray-300">
+            Please backup your prompts now using the Export feature in Settings to ensure you don't lose them.
+          </p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button
+            on:click={openSettingsForBackup}
+            class="flex-1 bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 font-medium min-h-[44px] touch-manipulation"
+          >
+            📤 Open Settings to Backup
+          </button>
+          <button
+            on:click={dismissDomainTransferWarning}
+            class="flex-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-md hover:bg-gray-400 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-400 min-h-[44px] touch-manipulation"
+          >
+            I'll Do This Later
+          </button>
+        </div>
+      </div>
+    </div>
   {/if}
 </main>
