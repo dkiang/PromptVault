@@ -65,3 +65,29 @@ Single-user AI practitioners such as writers, researchers, developers, and hobby
 - Quick access to create/edit/delete  
 - Visual indicator for Hidden prompts
 - Data Management (Export/Import) and AI key management available in the Settings modal
+
+## 9. Deployment Target
+The repository will be deployed using Vercel's CDN and functions architecture.
+
+###Project Root###
+The repository root MUST contain: package.json, .gitignore, and the public directory. Ignore all DS_Store files.
+
+###Static Assets###
+All public, browser-accessible files (images, CSS, fonts, root index.html) MUST be placed inside a folder named public/.
+
+###API/Backend Code###
+Server-side logic (API endpoints, form handlers, database queries) MUST be placed in a directory like api/ or within the framework's standard API route directory (e.g., pages/api or app/api in Next.js).
+
+###Core Logic/Frontend Code###
+All application-specific code and components (non-public files) should reside in a separate source folder, often src/ or the framework's designated route directories.
+
+###Pathing and Linking Constraints###
+1. Absolute Paths for Assets: All references to static assets (in HTML, CSS, or JavaScript) MUST use a root-relative path starting with a forward slash (/).
+	Example: Use \<img src="/images/logo.png"\> not \<img src="../images/logo.png"\>.
+2. No Direct File System Writes: The code MUST NOT use Node.js's fs (File System) module to write to the project's local directory (e.g., saving user uploads or data). All persistent storage must be handled by an external, remote service.
+3. Use Framework Routing: For internal links and page navigation, the code MUST use the native framework routing utility (e.g., Next.js <Link> component) or relative paths, avoiding hard-coded deployment URLs.
+
+###Deployment and Routing (Post-Generation)###
+The app is designed to be a micro-frontend (served under a subdirectory like /promptvault), so include a note or instruction block outlining the additional steps required in the main Vercel router project:
+1. Unique Vercel URL: The LLM should generate the application so that it functions correctly when deployed to its unique Vercel subdomain (e.g., my-app-xxxx.vercel.app).
+2. External Rewrite Requirement: To integrate this app under a path like kiang.net/promptvault, the Root Router Project will require a manual rewrite rule added to its vercel.json file.
