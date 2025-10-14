@@ -6,7 +6,9 @@ const config = {
       runtime: 'nodejs22.x'
     }),
     paths: {
-      base: process.env.NODE_ENV === 'production' ? '/promptvault' : ''
+      // Use BASE_PATH env var if set, otherwise empty (for standalone Vercel deployment)
+      // Set BASE_PATH=/promptvault in Vercel when deploying to kiang.net/promptvault
+      base: process.env.BASE_PATH || ''
     }
   }
 };
