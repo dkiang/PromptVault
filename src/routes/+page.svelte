@@ -248,10 +248,8 @@
 
     // Check if domain transfer warning should be shown
     const warningDismissed = localStorage.getItem('domainTransferWarningDismissed');
-    console.log('Warning dismissed status:', warningDismissed);
     if (!warningDismissed) {
       showDomainTransferWarning = true;
-      console.log('Showing domain transfer warning');
     }
     
     return () => {
