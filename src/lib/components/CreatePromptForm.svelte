@@ -1,6 +1,10 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import { storage } from '../storage';
+  import { dataStore as storage } from '../cloud-storage';
+  import { isOnline } from '../connectivity';
+  import { currentUser } from '../auth';
+
+  $: isOfflineAuthenticated = !$isOnline && $currentUser !== null;
   import { config } from '../config';
   import { getAIService, AIService } from '../ai';
   import TagSuggestions from './TagSuggestions.svelte';
@@ -160,7 +164,8 @@
     <div class="flex justify-end">
       <button
         type="submit"
-        disabled={isSubmitting || !content.trim()}
+        disabled={isSubmitting || !content.trim() || isOfflineAuthenticated}
+        title={isOfflineAuthenticated ? "You're offline — changes can't be saved right now" : undefined}
         class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
       >
         {isSubmitting ? 'Creating...' : 'Create Prompt'}

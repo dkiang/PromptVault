@@ -1,10 +1,15 @@
 <script lang="ts">
   import { onMount, createEventDispatcher } from 'svelte';
-  import { storage, type Prompt } from '../storage';
+  import { dataStore as storage } from '../cloud-storage';
+  import type { Prompt } from '../storage';
   import { config } from '../config';
   import TagList from './TagList.svelte';
   import { getAIService, AIService } from '../ai';
   import TagSuggestions from './TagSuggestions.svelte';
+  import { isOnline } from '../connectivity';
+  import { currentUser } from '../auth';
+
+  $: isOfflineAuthenticated = !$isOnline && $currentUser !== null;
 
   export let prompt: Prompt;
   export let searchQuery: string = '';
@@ -260,13 +265,17 @@
           </button>
           <button
             on:click={() => isEditing = true}
-            class="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[44px] touch-manipulation"
+            disabled={isOfflineAuthenticated}
+            title={isOfflineAuthenticated ? "You're offline — changes can't be saved right now" : undefined}
+            class="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-400 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
           >
             Edit
           </button>
           <button
             on:click={deletePrompt}
-            class="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[44px] touch-manipulation"
+            disabled={isOfflineAuthenticated}
+            title={isOfflineAuthenticated ? "You're offline — changes can't be saved right now" : undefined}
+            class="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-400 disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
           >
             Delete
           </button>

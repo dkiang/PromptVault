@@ -1,5 +1,9 @@
 <script lang="ts">
-  import { storage } from '../storage';
+  import { dataStore as storage } from '../cloud-storage';
+  import { isOnline } from '../connectivity';
+  import { currentUser } from '../auth';
+
+  $: isOfflineAuthenticated = !$isOnline && $currentUser !== null;
 
   let fileInput: HTMLInputElement;
   let isExporting = false;
@@ -57,10 +61,11 @@
   
   <button
     on:click={importPrompts}
-    disabled={isImporting}
+    disabled={isImporting || isOfflineAuthenticated}
+    title={isOfflineAuthenticated ? "You're offline — import unavailable" : undefined}
     class="w-full px-3 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm min-h-[44px] touch-manipulation"
   >
-    {isImporting ? 'Importing...' : 'Import'}
+    {isImporting ? 'Importing...' : isOfflineAuthenticated ? 'Import (offline)' : 'Import'}
   </button>
 </div>
 
