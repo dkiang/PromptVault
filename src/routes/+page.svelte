@@ -156,9 +156,14 @@
       const isCurrentlyInHiddenMode =
         (selectedTag === 'Hidden' && isHiddenUnlocked) ||
         (selectedTag !== 'all' && selectedTag !== 'Hidden' && isHiddenUnlocked);
-      selectedTag = tag;
-      if (tag !== 'Hidden' && !isCurrentlyInHiddenMode) {
-        isHiddenUnlocked = false;
+      if (tag === selectedTag && tag !== 'all') {
+        selectedTag = 'all';
+        if (tag === 'Hidden') isHiddenUnlocked = false;
+      } else {
+        selectedTag = tag;
+        if (tag !== 'Hidden' && !isCurrentlyInHiddenMode) {
+          isHiddenUnlocked = false;
+        }
       }
     }
 
