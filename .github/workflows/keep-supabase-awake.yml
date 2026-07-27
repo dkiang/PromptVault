@@ -1,0 +1,39 @@
+name: Keep Supabase Awake
+
+on:
+  schedule:
+    # Supabase Free projects can pause after 7 days of low activity.
+    # Run twice weekly so a single missed run still leaves room before pause.
+    - cron: "0 16 * * 1,4"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_KEEPALIVE_TABLE: ${{ vars.SUPABASE_KEEPALIVE_TABLE || 'prompts' }}
+    steps:
+      - name: Ping Supabase REST API
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${SUPABASE_URL}" ]]; then
+            echo "Missing required secret: SUPABASE_URL"
+            exit 1
+          fi
+
+          api_key="${SUPABASE_SERVICE_ROLE_KEY:-${SUPABASE_ANON_KEY:-}}"
+          if [[ -z "${api_key}" ]]; then
+            echo "Missing required secret: SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY"
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            --request HEAD \
+            "${SUPABASE_URL}/rest/v1/${SUPABASE_KEEPALIVE_TABLE}?select=*&limit=1" \
+            --header "apikey: ${api_key}" \
+            --header "Authorization: Bearer ${api_key}"

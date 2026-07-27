@@ -193,6 +193,22 @@ npm run build
 npm run preview
 ```
 
+### Supabase Keepalive
+
+This repo includes a scheduled GitHub Action at `.github/workflows/keep-supabase-awake.yml`
+to help prevent Supabase Free projects from pausing after low activity. It runs on
+Mondays and Thursdays at 16:00 UTC and sends a lightweight `HEAD` request to the
+Supabase REST API.
+
+Add these GitHub repository secrets before enabling the workflow:
+
+- `SUPABASE_URL`: your Supabase project URL, for example `https://abc123.supabase.co`
+- `SUPABASE_SERVICE_ROLE_KEY`: recommended when the `prompts` table is protected by RLS
+- `SUPABASE_ANON_KEY`: fallback if the target table can be read anonymously
+
+By default, the workflow pings the `prompts` table. To use a different table, add a
+repository variable named `SUPABASE_KEEPALIVE_TABLE`.
+
 ### Project Structure
 
 ```
