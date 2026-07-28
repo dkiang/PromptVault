@@ -1,22 +1,53 @@
-name: Keep Supabase Awake
+name: Keep Supabase Active
 
 on:
   schedule:
-    # Supabase Free projects can pause after 7 days of low activity.
-    # Run twice weekly so a single missed run still leaves room before pause.
-    - cron: "0 16 * * 1,4"
+    - cron: "17 2,10,18 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  ping:
+  keepalive:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_DB_POOLER_URL: ${{ secrets.SUPABASE_DB_POOLER_URL }}
       SUPABASE_KEEPALIVE_TABLE: ${{ vars.SUPABASE_KEEPALIVE_TABLE || 'prompts' }}
     steps:
-      - name: Ping Supabase REST API
+      - name: Prefer direct Postgres activity
+        id: postgres
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          db_url="${SUPABASE_DB_POOLER_URL:-${SUPABASE_DB_URL:-}}"
+          if [[ -z "${db_url}" ]]; then
+            echo "performed=false" >> "$GITHUB_OUTPUT"
+            echo "No SUPABASE_DB_POOLER_URL or SUPABASE_DB_URL secret configured; falling back to REST activity."
+            exit 0
+          fi
+
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+          psql "${db_url}" \
+            -v ON_ERROR_STOP=1 \
+            -v table_name="${SUPABASE_KEEPALIVE_TABLE}" <<'SQL'
+          select now() at time zone 'utc' as heartbeat_utc, current_database() as database_name;
+          select count(*) as keepalive_row_count from public.:"table_name";
+          select now() at time zone 'utc' as heartbeat_utc_again;
+          SQL
+
+          echo "performed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Fallback to repeated REST reads
+        if: steps.postgres.outputs.performed != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -32,8 +63,16 @@ jobs:
             exit 1
           fi
 
-          curl --fail --silent --show-error \
-            --request HEAD \
-            "${SUPABASE_URL}/rest/v1/${SUPABASE_KEEPALIVE_TABLE}?select=*&limit=1" \
-            --header "apikey: ${api_key}" \
-            --header "Authorization: Bearer ${api_key}"
+          endpoint="${SUPABASE_URL}/rest/v1/${SUPABASE_KEEPALIVE_TABLE}?select=*&limit=1"
+
+          for attempt in 1 2 3; do
+            curl --fail --silent --show-error \
+              "${endpoint}" \
+              --header "apikey: ${api_key}" \
+              --header "Authorization: Bearer ${api_key}" \
+              --header "Accept: application/json" \
+              >/dev/null
+
+            echo "REST keepalive request ${attempt} succeeded."
+            sleep 2
+          done
