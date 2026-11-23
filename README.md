@@ -86,38 +86,13 @@ Prompts are displayed showing only their content and tags for a clean, distracti
 
 ### Hidden Prompts
 
-**Note:** The Hidden prompts feature is disabled by default and can only be enabled via browser DevTools.
+Hidden prompts are off by default. You can enable them in Settings on iOS Safari and other browsers.
 
-**To enable Hidden prompts:**
-1. Open your browser's Developer Tools (F12 or right-click → Inspect)
-2. Go to the Console tab
-3. Run this command:
-   ```javascript
-   const config = JSON.parse(localStorage.getItem('promptvault_config') || '{}');
-   config.features = config.features || {};
-   config.features.hiddenPrompts = true;
-   localStorage.setItem('promptvault_config', JSON.stringify(config));
-   location.reload();
-   ```
-4. Refresh the page - the "🔒 Hidden" link will appear in the sidebar
+1. Open **Settings** from the sidebar. On mobile, tap the menu button first.
+2. Turn on **Show Hidden prompts in the sidebar** and close Settings.
+3. Select **🔒 Hidden** in the sidebar and enter your password. The default is **`foobar`**.
 
-**To disable Hidden prompts:**
-1. In DevTools Console, run:
-   ```javascript
-   const config = JSON.parse(localStorage.getItem('promptvault_config') || '{}');
-   config.features = config.features || {};
-   config.features.hiddenPrompts = false;
-   localStorage.setItem('promptvault_config', JSON.stringify(config));
-   location.reload();
-   ```
-
-**Using Hidden prompts (when enabled):**
-- Click **"🔒 Hidden"** in the sidebar to access password-protected prompts
-- Enter password: **"foobar"** when prompted
-- Hidden prompts are completely separate from regular prompts
-- Lock icon changes to 🔓 when unlocked
-- Switching away from hidden view automatically locks it again
-- Creating prompts in hidden mode automatically sets them as hidden
+Select **All Prompts** to lock Hidden mode. Prompts created in Hidden mode are marked as hidden by default. You can turn off the setting at any time to remove the Hidden entry from this browser's sidebar.
 
 ### AI-Powered Auto-Tagging
 
@@ -249,7 +224,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## Security Note
 
-PromptVault uses client-side storage and basic password protection suitable for personal use and demo purposes. The hidden prompt password is obfuscated but not truly secure since this is a client-side only application. The Hidden prompts feature is disabled by default and requires DevTools access to enable, providing an additional layer of obscurity. For production use with sensitive data, consider implementing server-side authentication.
+PromptVault uses client-side storage and basic password protection suitable for personal use and demo purposes. The hidden prompt password is obfuscated but not truly secure since this is a client-side only application. The Hidden prompts feature is disabled by default and can be enabled in Settings for each browser. For production use with sensitive data, consider implementing server-side authentication.
 
 ## Support
 

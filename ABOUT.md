@@ -7,7 +7,7 @@
 - **Search & Highlight**: Full-text search across all prompts with keyword highlighting  
 - **Chatbot Links**: Open prompts directly in ChatGPT or Perplexity  
 - **Tag System**: Organize prompts with dynamic, auto-updating tags  
-- **Hidden Prompts**: Optional password-protected prompts (DevTools activation required)  
+- **Hidden Prompts**: Optional password-protected prompts you can enable in Settings
 - **Dark Mode**: Toggle themes with persistent preferences  
 - **Import/Export**: Backup or transfer prompts via JSON  
 - **Share & Sync**: Generate secure, account-free links to sync across devices  

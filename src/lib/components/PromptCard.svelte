@@ -14,6 +14,7 @@
   export let prompt: Prompt;
   export let searchQuery: string = '';
   export let allTags: string[] = [];
+  export let isHiddenEnabled = config.isHiddenPromptsEnabled();
 
   const dispatch = createEventDispatcher();
 
@@ -199,7 +200,7 @@
         on:addTag={(event) => addEditSuggestionToTags(event.detail)}
       />
       
-      {#if config.isHiddenPromptsEnabled()}
+      {#if isHiddenEnabled}
         <div class="flex items-center">
           <input
             id="editIsHidden"

@@ -11,6 +11,7 @@
 
   export let defaultHidden: boolean = false;
   export let allTags: string[] = [];
+  export let isHiddenEnabled = config.isHiddenPromptsEnabled();
 
   const dispatch = createEventDispatcher();
 
@@ -147,7 +148,7 @@
       />
     </div>
     
-    {#if config.isHiddenPromptsEnabled()}
+    {#if isHiddenEnabled}
       <div class="flex items-center">
         <input
           id="isHidden"

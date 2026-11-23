@@ -26,6 +26,7 @@
   let searchQuery = '';
   let selectedTag = 'all';
   let allTags: string[] = [];
+  let isHiddenEnabled = config.isHiddenPromptsEnabled();
   let isHiddenUnlocked = false;
   let hiddenPassword = 'foobar';
   let showAboutModal = false;
@@ -140,11 +141,12 @@
 
   function handleTagFilter(tag: string) {
     if (tag === 'Hidden' && !isHiddenUnlocked) {
-      if (!config.isHiddenPromptsEnabled()) {
+      if (!isHiddenEnabled) {
         alert('Hidden prompts feature is disabled');
         return;
       }
       const password = prompt('Enter password to view hidden prompts:');
+      if (password === null) return;
       if (password === hiddenPassword) {
         isHiddenUnlocked = true;
         selectedTag = tag;
@@ -153,23 +155,31 @@
         return;
       }
     } else {
-      const isCurrentlyInHiddenMode =
-        (selectedTag === 'Hidden' && isHiddenUnlocked) ||
-        (selectedTag !== 'all' && selectedTag !== 'Hidden' && isHiddenUnlocked);
       if (tag === selectedTag && tag !== 'all') {
         selectedTag = 'all';
-        if (tag === 'Hidden') isHiddenUnlocked = false;
       } else {
         selectedTag = tag;
-        if (tag !== 'Hidden' && !isCurrentlyInHiddenMode) {
-          isHiddenUnlocked = false;
-        }
+      }
+      if (selectedTag === 'all') {
+        isHiddenUnlocked = false;
       }
     }
 
     if (!isDesktop) closeSidebar();
     extractTags();
     updateFilteredPrompts();
+  }
+
+  function handleHiddenEnabledChange(event: CustomEvent<boolean>) {
+    isHiddenEnabled = event.detail;
+    config.setHiddenPromptsEnabled(isHiddenEnabled);
+
+    if (!isHiddenEnabled && isHiddenUnlocked) {
+      isHiddenUnlocked = false;
+      selectedTag = 'all';
+      extractTags();
+      updateFilteredPrompts();
+    }
   }
 
   function handlePromptCreated() {
@@ -371,11 +381,11 @@
           All Prompts ({prompts.length})
         </button>
       </li>
-      {#if config.isHiddenPromptsEnabled()}
+      {#if isHiddenEnabled}
         <li>
           <button
             on:click={() => handleTagFilter('Hidden')}
-            class="w-full text-left hover:underline {selectedTag === 'Hidden' ? 'font-bold text-blue-600' : ''}"
+            class="w-full min-h-[44px] lg:min-h-0 touch-manipulation text-left hover:underline {selectedTag === 'Hidden' ? 'font-bold text-blue-600' : ''}"
           >
             {#if isHiddenUnlocked && selectedTag === 'Hidden'}
               🔓 Hidden ({prompts.filter(p => p.isHidden).length})
@@ -418,7 +428,7 @@
           🌙 Dark Mode
         {/if}
       </button>
-      <button on:click={() => showSettingsModal = true} class="block text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+      <button on:click={() => showSettingsModal = true} class="block min-h-[44px] lg:min-h-0 touch-manipulation text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
         ⚙️ Settings
       </button>
 
@@ -455,7 +465,7 @@
     <header class="flex justify-between items-center mb-6">
       <!-- Mobile hamburger menu -->
       <div class="flex items-center gap-4">
-        <button on:click={toggleSidebar} class="lg:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+        <button on:click={toggleSidebar} aria-label="Menu" aria-expanded={$sidebarOpen} class="lg:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
@@ -491,7 +501,7 @@
 
     <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       {#each filteredPrompts as p (p.id)}
-        <PromptCard prompt={p} {searchQuery} allTags={allTags} on:update={handlePromptUpdated} />
+        <PromptCard prompt={p} {searchQuery} allTags={allTags} {isHiddenEnabled} on:update={handlePromptUpdated} />
       {/each}
 
       {#if filteredPrompts.length === 0}
@@ -518,7 +528,7 @@
           <h2 class="text-xl font-bold">New Prompt</h2>
           <button on:click={() => modalOpen.set(false)} class="text-gray-500 hover:text-gray-700">✕</button>
         </div>
-        <CreatePromptForm defaultHidden={selectedTag === 'Hidden' && isHiddenUnlocked} allTags={allTags} on:created={handlePromptCreated} />
+        <CreatePromptForm defaultHidden={isHiddenUnlocked} allTags={allTags} {isHiddenEnabled} on:created={handlePromptCreated} />
       </div>
     </div>
   {/if}
@@ -648,7 +658,7 @@
             <li><strong>🤖 AI Auto-Tagging</strong>: OpenAI-powered tag suggestions as you type prompts, now preferring your existing tags and matching synonyms</li>
             <li><strong>🤖 Chatbot Links</strong>: Open prompts directly in ChatGPT or Perplexity</li>
             <li><strong>🏷️ Tag System</strong>: Organize prompts with dynamic, auto-updating tags</li>
-            <li><strong>🔒 Hidden Prompts</strong>: Optional password-protected prompts (DevTools activation required)</li>
+            <li><strong>🔒 Hidden Prompts</strong>: Optional password-protected prompts you can enable in Settings</li>
             <li><strong>🌙 Dark Mode</strong>: Toggle themes with persistent preferences</li>
             <li><strong>📤 Import/Export</strong>: Backup or transfer prompts via JSON (in Settings modal)</li>
             <li><strong>☁️ Cloud Sync</strong>: Sign in with a magic link to access prompts across all your devices</li>
@@ -665,6 +675,11 @@
 
   <!-- Settings Modal -->
   {#if showSettingsModal}
-    <SettingsModal show={showSettingsModal} isHiddenEnabled={config.isHiddenPromptsEnabled()} on:close={() => showSettingsModal = false} />
+    <SettingsModal
+      show={showSettingsModal}
+      {isHiddenEnabled}
+      on:hiddenEnabledChange={handleHiddenEnabledChange}
+      on:close={() => showSettingsModal = false}
+    />
   {/if}
 </main>

@@ -140,7 +140,7 @@
     <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-lg w-full max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">Settings</h2>
-        <button on:click={() => dispatch('close')} class="text-gray-500 hover:text-gray-700">✕</button>
+        <button aria-label="Close Settings" on:click={() => dispatch('close')} class="text-gray-500 hover:text-gray-700">✕</button>
       </div>
       <div class="space-y-8">
         <!-- AI Features -->
@@ -212,6 +212,21 @@
           <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">📤 Data Management</h3>
           <ExportImport />
         </div>
+        <div>
+          <label class="flex items-center gap-3 min-h-[44px] touch-manipulation text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <input
+              type="checkbox"
+              checked={isHiddenEnabled}
+              on:change={(event) => dispatch('hiddenEnabledChange', event.currentTarget.checked)}
+              aria-describedby="hidden-prompts-setting-description"
+              class="h-4 w-4"
+            />
+            Show Hidden prompts in the sidebar
+          </label>
+          <p id="hidden-prompts-setting-description" class="text-xs text-gray-600 dark:text-gray-400">
+            The Hidden view requires a password to unlock.
+          </p>
+        </div>
         <!-- Password Management (if enabled) -->
         {#if isHiddenEnabled}
         <div>
@@ -234,4 +249,4 @@
       </div>
     </div>
   </div>
-{/if} 
+{/if}
