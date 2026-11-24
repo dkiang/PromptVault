@@ -19,8 +19,6 @@
   const modalOpen = writable(false);
   const sidebarOpen = writable(false);
 
-  let isDesktop = false;
-
   let prompts: Prompt[] = [];
   let filteredPrompts: Prompt[] = [];
   let searchQuery = '';
@@ -136,7 +134,6 @@
   function handleSearch(event: CustomEvent<string>) {
     searchQuery = event.detail;
     updateFilteredPrompts();
-    if (!isDesktop) closeSidebar();
   }
 
   function handleTagFilter(tag: string) {
@@ -165,7 +162,7 @@
       }
     }
 
-    if (!isDesktop) closeSidebar();
+    closeSidebar();
     extractTags();
     updateFilteredPrompts();
   }
@@ -302,13 +299,6 @@
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   onMount(() => {
-    isDesktop = window.innerWidth >= 1024;
-
-    const handleResize = () => {
-      isDesktop = window.innerWidth >= 1024;
-    };
-    window.addEventListener('resize', handleResize);
-
     const handleKeydown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         if (showSignInModal) {
@@ -319,7 +309,7 @@
           modalOpen.set(false);
         } else if (showAboutModal) {
           showAboutModal = false;
-        } else if ($sidebarOpen && !isDesktop) {
+        } else if ($sidebarOpen) {
           closeSidebar();
         }
       }
@@ -356,21 +346,25 @@
     });
 
     return () => {
-      window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleKeydown);
       unsubscribeAuth();
     };
   });
 </script>
 
-<main class="flex h-screen bg-white text-black dark:bg-gray-900 dark:text-white landscape-compact">
+<main class="app-shell bg-white text-black dark:bg-gray-900 dark:text-white">
   <!-- Mobile Sidebar Overlay -->
   {#if $sidebarOpen}
-    <div class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden" on:click={closeSidebar}></div>
+    <button
+      type="button"
+      aria-label="Close menu"
+      class="sidebar-backdrop absolute inset-0 z-40 bg-black bg-opacity-50"
+      on:click={closeSidebar}
+    ></button>
   {/if}
 
   <!-- Sidebar -->
-  <aside class="w-64 h-full bg-gray-100 dark:bg-gray-800 p-4 overflow-y-auto z-50 transition-transform duration-300 ease-in-out {isDesktop ? 'static lg:z-auto lg:transition-none lg:transform-none' : 'fixed left-0 top-0 z-50 ' + ($sidebarOpen ? 'translate-x-0' : '-translate-x-full')}" on:click|stopPropagation>
+  <aside id="prompt-sidebar" class="app-sidebar bg-gray-100 dark:bg-gray-800" class:is-open={$sidebarOpen}>
     <!-- All Prompts -->
     <ul class="space-y-2 mb-6">
       <li>
@@ -399,7 +393,7 @@
 
     <!-- Search Bar -->
     <div class="mb-6">
-      <SearchBar on:search={handleSearch} bind:value={searchQuery} />
+      <SearchBar on:search={handleSearch} on:submit={closeSidebar} bind:value={searchQuery} />
     </div>
 
     <!-- Tags Section -->
@@ -461,18 +455,25 @@
   </aside>
 
   <!-- Main Content -->
-  <section class="flex-1 p-4 sm:p-6 overflow-y-auto">
-    <header class="flex justify-between items-center mb-6">
+  <section class="app-content">
+    <header class="flex flex-wrap justify-between items-center gap-x-4 gap-y-2 mb-6">
       <!-- Mobile hamburger menu -->
-      <div class="flex items-center gap-4">
-        <button on:click={toggleSidebar} aria-label="Menu" aria-expanded={$sidebarOpen} class="lg:hidden p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700">
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          on:click={toggleSidebar}
+          aria-label="Menu"
+          aria-controls="prompt-sidebar"
+          aria-expanded={$sidebarOpen}
+          class="sidebar-toggle inline-flex justify-center items-center min-w-[44px] min-h-[44px] rounded-md hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>
         <h1 class="text-xl sm:text-2xl font-bold">PromptVault</h1>
       </div>
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 ml-auto">
         {#if $currentUser}
           <span
             class="text-sm"
@@ -499,7 +500,7 @@
       </div>
     {/if}
 
-    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+    <div class="prompt-grid">
       {#each filteredPrompts as p (p.id)}
         <PromptCard prompt={p} {searchQuery} allTags={allTags} {isHiddenEnabled} on:update={handlePromptUpdated} />
       {/each}
@@ -522,8 +523,8 @@
 
   <!-- New Prompt Modal -->
   {#if $modalOpen}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
-      <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div class="app-modal bg-black bg-opacity-50 z-[60]">
+      <div class="app-modal-panel bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-md">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold">New Prompt</h2>
           <button on:click={() => modalOpen.set(false)} class="text-gray-500 hover:text-gray-700">✕</button>
@@ -535,8 +536,8 @@
 
   <!-- Sign In Modal -->
   {#if showSignInModal}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-sm w-full">
+    <div class="app-modal bg-black bg-opacity-50 z-[60]">
+      <div class="app-modal-panel bg-white dark:bg-gray-800 p-6 rounded shadow max-w-sm">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-lg font-bold">🔑 Sign In</h2>
           <button on:click={() => showSignInModal = false} class="text-gray-500 hover:text-gray-700">✕</button>
@@ -581,8 +582,8 @@
 
   <!-- Migration Modal -->
   {#if showMigrationModal}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md w-full">
+    <div class="app-modal bg-black bg-opacity-50 z-[60]">
+      <div class="app-modal-panel bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md">
         <h2 class="text-lg font-bold mb-3">📤 Upload your prompts to the cloud?</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
           You have {migrationPromptCount} prompt{migrationPromptCount === 1 ? '' : 's'} stored on this device.
@@ -610,8 +611,8 @@
 
   <!-- Orphaned Prompts Modal (second-device scenario) -->
   {#if showOrphanModal}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
-      <div class="bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md w-full">
+    <div class="app-modal bg-black bg-opacity-50 z-[60]">
+      <div class="app-modal-panel bg-white dark:bg-gray-800 p-6 rounded shadow max-w-md">
         <h2 class="text-lg font-bold mb-3">📱 Local prompts found</h2>
         <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
           You have {orphanPrompts.length} local prompt{orphanPrompts.length === 1 ? '' : 's'} on this device that aren't in your cloud library.
@@ -642,8 +643,8 @@
 
   <!-- About Modal -->
   {#if showAboutModal}
-    <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
-      <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+    <div class="app-modal bg-black bg-opacity-50 z-[60]">
+      <div class="app-modal-panel bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-2xl">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">About</h2>
           <button on:click={() => showAboutModal = false} class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">✕</button>

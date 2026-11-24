@@ -141,14 +141,14 @@ PromptVault is built mobile-first with extensive responsive design optimizations
 - **Button Sizing**: Responsive button sizing that adapts to screen size and orientation
 
 ### Responsive Layouts
-- **Adaptive Grid**: Prompt cards automatically adjust from 1 column (mobile) to 2 columns (tablet) to 3 columns (desktop)
+- **Adaptive Grid**: Prompt cards use one, two, or three columns based on available space, including iPhone Duo’s inner and outer displays and Split View.
 - **Flexible Typography**: Text sizes scale appropriately across devices (xl/2xl on desktop, lg/xl on mobile)
 - **Smart Spacing**: Padding and margins adapt to screen size for optimal content density
 
 ### Landscape Support
 - **Compact Mode**: Special landscape orientation optimizations for devices with limited height
 - **Reduced Spacing**: Tighter layouts when in landscape mode on mobile devices
-- **Viewport Optimization**: Enhanced viewport handling with `viewport-fit=cover` for modern devices
+- **Viewport Optimization**: The sidebar and dialogs adapt to the visible browser height and respect all four safe-area edges.
 
 ### Cross-Device Experience
 - **Consistent Functionality**: All features work identically across desktop, tablet, and mobile

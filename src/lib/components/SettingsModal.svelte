@@ -136,8 +136,8 @@
 </script>
 
 {#if show}
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
-    <div class="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-lg w-full max-h-[90vh] overflow-y-auto">
+  <div class="app-modal bg-black bg-opacity-50 z-[60]">
+    <div class="app-modal-panel bg-white dark:bg-gray-800 p-4 sm:p-6 rounded shadow max-w-lg">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">Settings</h2>
         <button aria-label="Close Settings" on:click={() => dispatch('close')} class="text-gray-500 hover:text-gray-700">✕</button>
